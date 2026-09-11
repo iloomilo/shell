@@ -4,8 +4,9 @@ import Quickshell.Services.UPower
 import qs.theme
 import qs.components
 
-Rectangle {
+RowLayout {
     id: root
+    spacing: 4
 
     readonly property var device: UPower.displayDevice
     visible: Boolean(device && device.isPresent)
@@ -31,30 +32,29 @@ Rectangle {
         return "battery_alert";
     }
 
-    height: 24
-    width: content.implicitWidth + 14
-    implicitWidth: width
-    implicitHeight: height
-    radius: 12
-    color: isLow ? Colors.error_container : Colors.surface_container_high
+    Icon {
+        text: root.iconName
+        color: root.isLow ? Colors.error : (root.isCharging ? Colors.primary : (hover.hovered ? Colors.on_surface : Colors.on_surface_variant))
+        Layout.alignment: Qt.AlignVCenter
 
-    RowLayout {
-        id: content
-        anchors.centerIn: parent
-        spacing: 4
-
-        Icon {
-            text: root.iconName
-            color: root.isLow ? Colors.error : (root.isCharging ? Colors.primary : Colors.on_surface_variant)
-            Layout.alignment: Qt.AlignVCenter
+        Behavior on color {
+            ColorAnimation { duration: Motion.durationNormal }
         }
+    }
 
-        StyledText {
-            text: root.percent + "%"
-            color: root.isLow ? Colors.on_error_container : Colors.on_surface
-            font.pixelSize: 11
-            font.weight: Font.DemiBold
-            Layout.alignment: Qt.AlignVCenter
+    StyledText {
+        text: root.percent + "%"
+        color: root.isLow ? Colors.error : (hover.hovered ? Colors.on_surface : Colors.on_surface_variant)
+        font.pixelSize: Typography.sizeCaption
+        font.weight: Typography.weightMedium
+        Layout.alignment: Qt.AlignVCenter
+
+        Behavior on color {
+            ColorAnimation { duration: Motion.durationNormal }
         }
+    }
+
+    HoverHandler {
+        id: hover
     }
 }
