@@ -1,0 +1,8 @@
+.qmlls.ini
+.vscode/
+.idea/
+__pycache__/
+*.py[cod]
+.DS_Store
+*.swp
+*~
