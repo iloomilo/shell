@@ -11,11 +11,30 @@ Item {
     property int pixelSize: Typography.sizeIconMedium
     property bool rotating: false
     property alias hovered: iconHover.hovered
+    property int touchTarget: 32
 
     signal clicked()
 
-    implicitWidth: pixelSize
-    implicitHeight: pixelSize
+    implicitWidth: touchTarget
+    implicitHeight: touchTarget
+
+    Rectangle {
+        id: stateLayer
+        anchors.centerIn: parent
+        width: root.touchTarget
+        height: root.touchTarget
+        radius: width / 2
+        color: root.active ? root.activeColor : Colors.on_surface
+        opacity: tapHandler.pressed ? 0.12 : (iconHover.hovered ? 0.08 : 0.0)
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Motion.durationShort2
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.standard
+            }
+        }
+    }
 
     Text {
         id: iconText
@@ -39,6 +58,7 @@ Item {
     }
 
     TapHandler {
+        id: tapHandler
         onTapped: root.clicked()
     }
 

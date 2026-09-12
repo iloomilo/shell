@@ -12,11 +12,61 @@ Singleton {
     property string connectedDeviceName: ""
     property var devices: []
     property bool scanning: false
+    property string busyMac: ""
 
     readonly property string iconName: {
         if (!powered) return "bluetooth_disabled";
         if (connected) return "bluetooth_connected";
         return "bluetooth";
+    }
+
+    readonly property alias deviceModel: deviceModel
+
+    ListModel {
+        id: deviceModel
+    }
+
+    function syncDevices(list) {
+        for (let i = deviceModel.count - 1; i >= 0; --i) {
+            const mac = deviceModel.get(i).mac;
+            let stillThere = false;
+            for (let j = 0; j < list.length; ++j) {
+                if (list[j].mac === mac) {
+                    stillThere = true;
+                    break;
+                }
+            }
+            if (!stillThere)
+                deviceModel.remove(i);
+        }
+
+        for (let k = 0; k < list.length; ++k) {
+            const d = list[k];
+            const entry = {
+                mac: d.mac || "",
+                name: d.name || "",
+                deviceIcon: d.icon || "bluetooth",
+                connected: Boolean(d.connected),
+                paired: Boolean(d.paired),
+                battery: (d.battery === undefined || d.battery === null) ? -1 : d.battery
+            };
+
+            let at = -1;
+            for (let m = 0; m < deviceModel.count; ++m) {
+                if (deviceModel.get(m).mac === entry.mac) {
+                    at = m;
+                    break;
+                }
+            }
+
+            if (at === -1) {
+                deviceModel.insert(Math.min(k, deviceModel.count), entry);
+            } else {
+                if (at !== k && k < deviceModel.count)
+                    deviceModel.move(at, k, 1);
+                deviceModel.set(k, entry);
+            }
+        }
     }
 
     function check() {
@@ -54,19 +104,21 @@ Singleton {
 
     function connect(mac) {
         if (actionProc.running) actionProc.running = false;
-        actionProc.command = ["python3", "/home/ilomilo/.config/quickshell/scripts/bluetooth.py", "connect", mac];
+        root.busyMac = mac;
+        actionProc.command = ["python3", Quickshell.shellDir + "/scripts/bluetooth.py", "connect", mac];
         actionProc.running = true;
     }
 
     function disconnect(mac) {
         if (actionProc.running) actionProc.running = false;
-        actionProc.command = ["python3", "/home/ilomilo/.config/quickshell/scripts/bluetooth.py", "disconnect", mac];
+        root.busyMac = mac;
+        actionProc.command = ["python3", Quickshell.shellDir + "/scripts/bluetooth.py", "disconnect", mac];
         actionProc.running = true;
     }
 
     Process {
         id: statusProc
-        command: ["python3", "/home/ilomilo/.config/quickshell/scripts/bluetooth.py", "status"]
+        command: ["python3", Quickshell.shellDir + "/scripts/bluetooth.py", "status"]
         stdout: StdioCollector {
             onTextChanged: {
                 if (!text || text.trim().length === 0) return;
@@ -75,6 +127,7 @@ Singleton {
                     root.powered = Boolean(data.powered);
                     let devs = data.devices || [];
                     root.devices = devs;
+                    root.syncDevices(devs);
                     let hasConn = false;
                     let connName = "";
                     for (let i = 0; i < devs.length; ++i) {
@@ -93,7 +146,7 @@ Singleton {
 
     Process {
         id: scanProc
-        command: ["python3", "/home/ilomilo/.config/quickshell/scripts/bluetooth.py", "scan"]
+        command: ["python3", Quickshell.shellDir + "/scripts/bluetooth.py", "scan"]
         stdout: StdioCollector {
             onTextChanged: {
                 if (!text || text.trim().length === 0) return;
@@ -101,6 +154,7 @@ Singleton {
                     let data = JSON.parse(text.trim());
                     root.powered = Boolean(data.powered);
                     root.devices = data.devices || [];
+                    root.syncDevices(root.devices);
                 } catch (e) {}
                 if (!minScanTimer.running) {
                     root.scanning = false;
@@ -116,13 +170,16 @@ Singleton {
 
     Process {
         id: toggleProc
-        command: ["python3", "/home/ilomilo/.config/quickshell/scripts/bluetooth.py", "toggle"]
+        command: ["python3", Quickshell.shellDir + "/scripts/bluetooth.py", "toggle"]
         onExited: root.check()
     }
 
     Process {
         id: actionProc
-        onExited: root.check()
+        onExited: {
+            root.busyMac = "";
+            root.check();
+        }
     }
 
     Timer {

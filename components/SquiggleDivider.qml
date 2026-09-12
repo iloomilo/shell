@@ -8,7 +8,7 @@ Canvas {
     property real phase: 0.0
     property real targetAmplitude: active ? 3.0 : 0.0
     property real amplitude: targetAmplitude
-    property color strokeColor: active ? Colors.primary : Colors.surface_container_highest
+    property color strokeColor: active ? Colors.tertiary : Colors.surface_container_highest
 
     implicitHeight: 16
 

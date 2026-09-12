@@ -4,10 +4,14 @@ import Quickshell
 import QtQuick
 
 Singleton {
+    readonly property real exclusiveZone: 24
+    readonly property real barTopMargin: 8
+    readonly property real barSideMargin: 12
+
     readonly property real barHeight: 44
     readonly property real islandHeight: 32
     readonly property real expandedWidth: 280
-    readonly property real expandedHeight: 300
+    readonly property real expandedHeight: 320
     readonly property real expandedHeroX: 16
 
     readonly property real sidePadding: 12
@@ -18,11 +22,13 @@ Singleton {
     readonly property real radiusCard: 6
     readonly property real radiusPill: 8
     readonly property real radiusContainer: 12
+    readonly property real radiusLarge: 20
+    readonly property real radiusDialog: 28
 
     readonly property real itemHeightNormal: 38
     readonly property real itemHeightActive: 42
     readonly property real avatarSize: 26
 
-    readonly property real glassOpacity: 0.85
-    readonly property real islandOpacity: 0.92
+    readonly property real glassOpacity: 1.0
+    readonly property real islandOpacity: 1.0
 }

@@ -8,9 +8,62 @@ Rectangle {
     id: root
 
     property string currentMenu: ""
+    property string lastMenu: "wifi"
+
     readonly property bool isExpanded: currentMenu !== ""
     readonly property bool isWifi: currentMenu === "wifi"
     readonly property bool isBluetooth: currentMenu === "bluetooth"
+    readonly property bool isPower: currentMenu === "power"
+
+    readonly property string displayMenu: currentMenu !== "" ? currentMenu : lastMenu
+    readonly property bool showsWifi: displayMenu === "wifi"
+    readonly property bool showsBluetooth: displayMenu === "bluetooth"
+    readonly property bool showsPower: displayMenu === "power"
+
+    onCurrentMenuChanged: {
+        if (currentMenu !== "")
+            lastMenu = currentMenu;
+        Power.menuOpen = (currentMenu === "power");
+    }
+
+    Connections {
+        target: Power
+        function onMenuOpenChanged() {
+            if (Power.menuOpen && root.currentMenu !== "power") {
+                root.currentMenu = "power";
+            } else if (!Power.menuOpen && root.currentMenu === "power") {
+                root.currentMenu = "";
+            }
+        }
+    }
+
+    property bool expandedVisible: false
+    property bool collapsedVisible: true
+
+    onIsExpandedChanged: {
+        menuTransitioning = true;
+        menuTransitionTimer.restart();
+
+        if (isExpanded) {
+            collapsedVisible = false;
+            contentDelay.interval = Motion.contentStagger;
+        } else {
+            expandedVisible = false;
+            contentDelay.interval = Motion.collapseStagger;
+        }
+        contentDelay.restart();
+    }
+
+    Timer {
+        id: contentDelay
+        repeat: false
+        onTriggered: {
+            if (root.isExpanded)
+                root.expandedVisible = true;
+            else
+                root.collapsedVisible = true;
+        }
+    }
     property bool menuTransitioning: false
 
     Timer {
@@ -20,18 +73,14 @@ Rectangle {
         onTriggered: root.menuTransitioning = false
     }
 
-    onIsExpandedChanged: {
-        root.menuTransitioning = true;
-        menuTransitionTimer.restart();
-    }
-
     readonly property real itemSpacing: Metrics.itemSpacing
     readonly property real sidePadding: Metrics.sidePadding
     readonly property real collapsedLeftX: sidePadding
     readonly property real collapsedWifiX: collapsedLeftX + leftGroup.width + itemSpacing
     readonly property real collapsedBtX: collapsedWifiX + wifiHero.width + itemSpacing
     readonly property real collapsedBatteryX: collapsedBtX + btHero.width + itemSpacing
-    readonly property real collapsedWidth: collapsedBatteryX + batteryGroup.width + sidePadding
+    readonly property real collapsedPowerX: collapsedBatteryX + batteryGroup.width + itemSpacing + 8
+    readonly property real collapsedWidth: collapsedPowerX + 20 + sidePadding
 
     readonly property real expandedWidth: Metrics.expandedWidth
     readonly property real expandedHeight: Metrics.expandedHeight
@@ -45,57 +94,41 @@ Rectangle {
 
     Behavior on width {
         enabled: root.isExpanded || root.menuTransitioning
-        SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
-            epsilon: Motion.springEpsilon
-        }
+        MorphAnimation { expanding: root.isExpanded }
     }
 
     Behavior on height {
-        SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
-            epsilon: Motion.springEpsilon
-        }
+        MorphAnimation { expanding: root.isExpanded }
     }
 
     Behavior on radius {
-        SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
-            epsilon: Motion.springEpsilon
-        }
+        MorphAnimation { expanding: root.isExpanded }
     }
 
     RowLayout {
         id: leftGroup
         width: implicitWidth
-        height: 32
+        height: Metrics.islandHeight
         spacing: 0
         x: root.isExpanded ? (-leftGroup.width - 20) : root.collapsedLeftX
         y: 0
-        opacity: root.isExpanded ? 0.0 : 1.0
+        opacity: root.collapsedVisible ? 1.0 : 0.0
         scale: root.isExpanded ? 0.8 : 1.0
         visible: opacity > 0
 
         Behavior on x {
             enabled: root.isExpanded || root.menuTransitioning
-            SpringAnimation {
-                spring: Motion.springStiffness
-                damping: Motion.springDamping
-                epsilon: Motion.springEpsilon
-            }
+            MorphAnimation { expanding: root.isExpanded }
         }
         Behavior on opacity {
-            NumberAnimation { duration: root.isExpanded ? 200 : 260; easing.type: Motion.easingStandard }
+            NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
         }
         Behavior on scale {
-            SpringAnimation {
-                spring: Motion.springStiffness
-                damping: Motion.springDamping
-                epsilon: Motion.springScaleEpsilon
-            }
+            MorphAnimation { expanding: root.isExpanded }
         }
 
         Audio {
@@ -107,31 +140,27 @@ Rectangle {
     RowLayout {
         id: batteryGroup
         width: implicitWidth
-        height: 32
+        height: Metrics.islandHeight
         spacing: 0
         x: root.isExpanded ? (root.expandedWidth + 20) : root.collapsedBatteryX
         y: 0
-        opacity: root.isExpanded ? 0.0 : 1.0
+        opacity: root.collapsedVisible ? 1.0 : 0.0
         scale: root.isExpanded ? 0.8 : 1.0
         visible: opacity > 0
 
         Behavior on x {
             enabled: root.isExpanded || root.menuTransitioning
-            SpringAnimation {
-                spring: Motion.springStiffness
-                damping: Motion.springDamping
-                epsilon: Motion.springEpsilon
-            }
+            MorphAnimation { expanding: root.isExpanded }
         }
         Behavior on opacity {
-            NumberAnimation { duration: root.isExpanded ? 200 : 260; easing.type: Motion.easingStandard }
+            NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
         }
         Behavior on scale {
-            SpringAnimation {
-                spring: Motion.springStiffness
-                damping: Motion.springDamping
-                epsilon: Motion.springScaleEpsilon
-            }
+            MorphAnimation { expanding: root.isExpanded }
         }
 
         Battery {
@@ -143,8 +172,8 @@ Rectangle {
         id: headerBar
         anchors.top: parent.top
         anchors.left: parent.left
-        anchors.right: parent.right
-        height: 44
+        width: root.expandedWidth
+        height: Metrics.barHeight
 
         Item {
             id: wifiHero
@@ -152,36 +181,28 @@ Rectangle {
             height: 20
             x: root.isWifi 
                 ? root.expandedHeroX 
-                : (root.isBluetooth ? (-width - 20) : root.collapsedWifiX)
-            y: root.isWifi ? ((headerBar.height - height) / 2) : ((32 - height) / 2)
-            opacity: root.isBluetooth ? 0.0 : 1.0
-            scale: root.isBluetooth ? 0.8 : 1.0
+                : (root.isBluetooth || root.isPower ? (-width - 20) : root.collapsedWifiX)
+            y: root.isWifi ? ((headerBar.height - height) / 2) : ((Metrics.islandHeight - height) / 2)
+            opacity: (root.isBluetooth || root.isPower) ? 0.0 : 1.0
+            scale: (root.isBluetooth || root.isPower) ? 0.8 : 1.0
             visible: opacity > 0
 
             Behavior on x {
                 enabled: root.isExpanded || root.menuTransitioning
-                SpringAnimation {
-                    spring: Motion.springStiffness
-                    damping: Motion.springDamping
-                    epsilon: Motion.springEpsilon
-                }
+                MorphAnimation { expanding: root.isExpanded }
             }
             Behavior on y {
-                SpringAnimation {
-                    spring: Motion.springStiffness
-                    damping: Motion.springDamping
-                    epsilon: Motion.springEpsilon
-                }
+                MorphAnimation { expanding: root.isExpanded }
             }
             Behavior on opacity {
-                NumberAnimation { duration: root.isExpanded ? 200 : 260; easing.type: Motion.easingStandard }
+                NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
             }
             Behavior on scale {
-                SpringAnimation {
-                    spring: Motion.springStiffness
-                    damping: Motion.springDamping
-                    epsilon: Motion.springScaleEpsilon
-                }
+                MorphAnimation { expanding: root.isExpanded }
             }
 
             Icon {
@@ -224,36 +245,28 @@ Rectangle {
             height: 20
             x: root.isBluetooth 
                 ? root.expandedHeroX 
-                : (root.isWifi ? (root.expandedWidth + 20) : root.collapsedBtX)
-            y: root.isBluetooth ? ((headerBar.height - height) / 2) : ((32 - height) / 2)
-            opacity: root.isWifi ? 0.0 : 1.0
-            scale: root.isWifi ? 0.8 : 1.0
+                : (root.isPower ? (-width - 20) : (root.isWifi ? (root.expandedWidth + 20) : root.collapsedBtX))
+            y: root.isBluetooth ? ((headerBar.height - height) / 2) : ((Metrics.islandHeight - height) / 2)
+            opacity: (root.isWifi || root.isPower) ? 0.0 : 1.0
+            scale: (root.isWifi || root.isPower) ? 0.8 : 1.0
             visible: opacity > 0
 
             Behavior on x {
                 enabled: root.isExpanded || root.menuTransitioning
-                SpringAnimation {
-                    spring: Motion.springStiffness
-                    damping: Motion.springDamping
-                    epsilon: Motion.springEpsilon
-                }
+                MorphAnimation { expanding: root.isExpanded }
             }
             Behavior on y {
-                SpringAnimation {
-                    spring: Motion.springStiffness
-                    damping: Motion.springDamping
-                    epsilon: Motion.springEpsilon
-                }
+                MorphAnimation { expanding: root.isExpanded }
             }
             Behavior on opacity {
-                NumberAnimation { duration: root.isExpanded ? 200 : 260; easing.type: Motion.easingStandard }
+                NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
             }
             Behavior on scale {
-                SpringAnimation {
-                    spring: Motion.springStiffness
-                    damping: Motion.springDamping
-                    epsilon: Motion.springScaleEpsilon
-                }
+                MorphAnimation { expanding: root.isExpanded }
             }
 
             Icon {
@@ -292,44 +305,83 @@ Rectangle {
             }
         }
 
-        RowLayout {
+        Item {
+            id: powerHero
+            width: 20
+            height: 20
+            x: root.isPower 
+                ? root.expandedHeroX 
+                : (root.isWifi || root.isBluetooth ? (root.expandedWidth + 20) : root.collapsedPowerX)
+            y: root.isPower ? ((headerBar.height - height) / 2) : ((Metrics.islandHeight - height) / 2)
+            opacity: (root.isWifi || root.isBluetooth) ? 0.0 : 1.0
+            scale: (root.isWifi || root.isBluetooth) ? 0.8 : 1.0
+            visible: opacity > 0
+
+            Behavior on x {
+                enabled: root.isExpanded || root.menuTransitioning
+                MorphAnimation { expanding: root.isExpanded }
+            }
+            Behavior on y {
+                MorphAnimation { expanding: root.isExpanded }
+            }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
+            }
+            Behavior on scale {
+                MorphAnimation { expanding: root.isExpanded }
+            }
+
+            Icon {
+                id: powerHeroIcon
+                anchors.centerIn: parent
+                text: "power_settings_new"
+                color: root.isPower 
+                    ? Colors.error 
+                    : (powerHover.hovered ? Colors.error : Colors.on_surface_variant)
+
+                Behavior on color {
+                    ColorAnimation { duration: Motion.durationNormal }
+                }
+            }
+
+            TapHandler {
+                onTapped: {
+                    if (root.currentMenu === "power") {
+                        root.currentMenu = "";
+                    } else {
+                        root.currentMenu = "power";
+                    }
+                }
+            }
+
+            HoverHandler {
+                id: powerHover
+                cursorShape: Qt.PointingHandCursor
+            }
+        }
+
+        StyledText {
             anchors.left: parent.left
-            anchors.leftMargin: 44
+            anchors.leftMargin: Metrics.barHeight
             anchors.right: headerActions.left
             anchors.rightMargin: 8
             anchors.verticalCenter: headerBar.verticalCenter
-            spacing: Metrics.layoutSpacing
-            opacity: root.isExpanded ? 1.0 : 0.0
+            text: root.showsPower ? "Power" : (root.showsWifi ? "Wi-Fi" : "Bluetooth")
+            font.pixelSize: Typography.sizeTitle
+            font.weight: Typography.weightBold
+            elide: Text.ElideRight
+            opacity: root.expandedVisible ? 1.0 : 0.0
             visible: opacity > 0
 
             Behavior on opacity {
-                NumberAnimation { duration: root.isExpanded ? 220 : 160; easing.type: Motion.easingStandard }
-            }
-
-            StyledText {
-                text: root.isWifi ? "Wi-Fi" : "Bluetooth"
-                font.pixelSize: Typography.sizeTitle
-                font.weight: Typography.weightBold
-            }
-
-            StyledText {
-                text: {
-                    if (root.isWifi) {
-                        return Network.scanning ? "• scanning..." : "";
-                    } else {
-                        if (Bluetooth.scanning) return "• scanning...";
-                        if (!Bluetooth.powered) return "• Off";
-                        return "";
-                    }
-                }
-                color: (root.isWifi ? Network.scanning : Bluetooth.scanning) ? Colors.primary : Colors.outline
-                font.pixelSize: Typography.sizeCaption
-                font.weight: Typography.weightMedium
-                visible: text.length > 0
-                opacity: visible ? 1.0 : 0.0
-
-                Behavior on opacity {
-                    NumberAnimation { duration: Motion.durationNormal }
+                NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
                 }
             }
         }
@@ -337,29 +389,35 @@ Rectangle {
         RowLayout {
             id: headerActions
             anchors.right: parent.right
-            anchors.rightMargin: 14
+            anchors.rightMargin: 12
             anchors.verticalCenter: headerBar.verticalCenter
-            spacing: Metrics.itemSpacing
-            opacity: root.isExpanded ? 1.0 : 0.0
+            spacing: Metrics.layoutSpacing
+            opacity: root.expandedVisible ? 1.0 : 0.0
             visible: opacity > 0
 
             Behavior on opacity {
-                NumberAnimation { duration: root.isExpanded ? 220 : 160; easing.type: Motion.easingStandard }
+                NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
             }
 
             IconButton {
-                visible: root.isBluetooth
+                visible: root.showsBluetooth
                 icon: Bluetooth.powered ? "power_settings_new" : "power_off"
                 active: Bluetooth.powered
                 onClicked: Bluetooth.togglePower()
             }
 
             IconButton {
+                visible: !root.showsPower
                 icon: "refresh"
-                rotating: root.isWifi ? Network.scanning : Bluetooth.scanning
-                active: root.isWifi ? Network.scanning : Bluetooth.scanning
+                rotating: root.showsWifi ? Network.scanning : Bluetooth.scanning
+                active: root.showsWifi ? Network.scanning : Bluetooth.scanning
+                activeColor: Colors.tertiary
                 onClicked: {
-                    if (root.isWifi) {
+                    if (root.showsWifi) {
                         Network.scan(true);
                     } else {
                         Bluetooth.scan(true);
@@ -379,15 +437,18 @@ Rectangle {
         anchors.top: headerBar.bottom
         anchors.topMargin: Metrics.layoutSpacing
         anchors.left: parent.left
-        anchors.right: parent.right
         anchors.leftMargin: Metrics.sidePadding
-        anchors.rightMargin: Metrics.sidePadding
-        active: root.isWifi ? Network.scanning : Bluetooth.scanning
-        opacity: root.isExpanded ? 1.0 : 0.0
+        width: root.expandedWidth - 2 * Metrics.sidePadding
+        active: !root.showsPower && (root.showsWifi ? Network.scanning : Bluetooth.scanning)
+        opacity: root.expandedVisible ? 1.0 : 0.0
         visible: opacity > 0
 
         Behavior on opacity {
-            NumberAnimation { duration: root.isExpanded ? 220 : 160; easing.type: Motion.easingStandard }
+            NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
         }
     }
 
@@ -396,36 +457,39 @@ Rectangle {
         anchors.top: squiggleDivider.bottom
         anchors.topMargin: 8
         anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
         anchors.leftMargin: 10
-        anchors.rightMargin: 10
-        anchors.bottomMargin: 14
+        width: root.expandedWidth - 20
+        height: root.expandedHeight - y - 14
 
-        opacity: root.isExpanded ? ((root.isWifi ? Network.scanning : Bluetooth.scanning) ? 0.65 : 1.0) : 0.0
+        opacity: root.expandedVisible ? ((root.showsWifi ? Network.scanning : Bluetooth.scanning) ? 0.65 : 1.0) : 0.0
         visible: opacity > 0
 
         transform: Translate {
             y: root.isExpanded ? 0 : 10
             Behavior on y {
-                SpringAnimation {
-                    spring: Motion.springStiffness
-                    damping: Motion.springDamping
-                    epsilon: Motion.springEpsilon
-                }
+                MorphAnimation { expanding: root.isExpanded }
             }
         }
 
         Behavior on opacity {
-            NumberAnimation { duration: root.isExpanded ? 240 : 160; easing.type: Motion.easingStandard }
+            NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
         }
 
         WifiMenu {
-            visible: root.isWifi
+            visible: root.showsWifi
         }
 
         BluetoothMenu {
-            visible: root.isBluetooth
+            visible: root.showsBluetooth
+        }
+
+        PowerMenu {
+            visible: root.showsPower
+            onActionTriggered: root.currentMenu = ""
         }
     }
 }

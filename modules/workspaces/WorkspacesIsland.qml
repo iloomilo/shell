@@ -1,15 +1,25 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.components
+import qs.theme
+import qs.modules.system
 
-GlassContainer {
+Container {
     id: root
-    height: 32
+    height: Metrics.islandHeight
     width: wsContent.implicitWidth + 20
 
     RowLayout {
         id: wsContent
         anchors.centerIn: parent
-        Workspaces {}
+        spacing: 12
+
+        OsLogo {
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Workspaces {
+            Layout.alignment: Qt.AlignVCenter
+        }
     }
 }

@@ -10,10 +10,18 @@ Item {
 
     EmptyState {
         anchors.centerIn: parent
-        visible: wifiList.count === 0
+        opacity: wifiList.count === 0 ? 1.0 : 0.0
+        visible: opacity > 0
         icon: Network.scanning ? "sync" : "wifi_off"
         rotating: Network.scanning
         text: Network.scanning ? "Searching networks..." : "No networks found"
+
+        Behavior on opacity {
+            FadeAnimation {
+                entering: wifiList.count === 0
+                stagger: Motion.contentStagger
+            }
+        }
     }
 
     ListView {
@@ -21,23 +29,82 @@ Item {
         anchors.fill: parent
         clip: true
         spacing: Metrics.layoutSpacing
-        model: Network.networks
+        model: Network.networkModel
+        boundsBehavior: Flickable.StopAtBounds
+
+        add: Transition {
+            NumberAnimation {
+                properties: "opacity"
+                from: 0.0
+                to: 1.0
+                duration: Motion.contentEnter
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.emphasizedDecelerate
+            }
+            NumberAnimation {
+                properties: "scale"
+                from: 0.92
+                to: 1.0
+                duration: Motion.contentEnter
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.emphasizedDecelerate
+            }
+        }
+
+        remove: Transition {
+            NumberAnimation {
+                properties: "opacity"
+                to: 0.0
+                duration: Motion.contentExit
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.emphasizedAccelerate
+            }
+            NumberAnimation {
+                properties: "scale"
+                to: 0.92
+                duration: Motion.contentExit
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.emphasizedAccelerate
+            }
+        }
+
+        displaced: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: Motion.durationMedium2
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.emphasized
+            }
+        }
 
         delegate: DeviceListItem {
+            required property string ssid
+            required property int strength
+            required property bool inUse
+            required property bool locked
+
+            readonly property bool isConnecting: Network.connectingTo === ssid
+            readonly property bool hasFailed: Network.failedSsid === ssid
+
             width: wifiList.width
-            active: modelData.inUse
+            active: inUse
+            loading: isConnecting
             icon: {
-                if (modelData.signal >= 75) return "wifi";
-                if (modelData.signal >= 50) return "wifi_2_bar";
+                if (strength >= 67) return "wifi";
+                if (strength >= 34) return "wifi_2_bar";
                 return "wifi_1_bar";
             }
-            title: modelData.ssid
-            subtitle: modelData.inUse ? "Connected" : ""
-            trailingIcon: modelData.locked ? "lock" : ""
+            title: ssid
+            subtitle: {
+                if (isConnecting) return "Connecting...";
+                if (hasFailed) return "Connection failed";
+                return inUse ? "Connected" : "";
+            }
+            subtitleColor: hasFailed ? Colors.error : (isConnecting ? Colors.tertiary : (inUse ? Colors.primary : Colors.on_surface_variant))
+            trailingIcon: locked ? "lock" : ""
             onClicked: {
-                if (!modelData.inUse) {
-                    Network.connect(modelData.ssid);
-                }
+                if (!inUse && !isConnecting)
+                    Network.connect(ssid);
             }
         }
     }

@@ -19,4 +19,28 @@ Singleton {
     readonly property int easingStandard: Easing.OutCubic
     readonly property int easingTactile: Easing.OutQuad
     readonly property int easingExpressive: Easing.OutBack
+
+    readonly property var emphasized: [0.2, 0.0, 0.0, 1.0, 1.0, 1.0]
+    readonly property var emphasizedDecelerate: [0.05, 0.7, 0.1, 1.0, 1.0, 1.0]
+    readonly property var emphasizedAccelerate: [0.3, 0.0, 0.8, 0.15, 1.0, 1.0]
+    readonly property var standard: [0.2, 0.0, 0.0, 1.0, 1.0, 1.0]
+    readonly property var standardDecelerate: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+    readonly property var standardAccelerate: [0.3, 0.0, 1.0, 1.0, 1.0, 1.0]
+
+    readonly property int durationShort2: 100
+    readonly property int durationShort3: 150
+    readonly property int durationShort4: 200
+    readonly property int durationMedium1: 250
+    readonly property int durationMedium2: 300
+    readonly property int durationMedium4: 400
+    readonly property int durationLong2: 500
+
+    readonly property int morphEnter: durationMedium4
+    readonly property int morphExit: durationMedium2
+    readonly property int contentEnter: durationShort4
+    readonly property int contentExit: durationShort2
+    readonly property int contentStagger: durationMedium1
+    readonly property int collapseStagger: durationShort4
+    readonly property int collapseEnter: durationShort2
+    readonly property int contentFade: durationShort2
 }

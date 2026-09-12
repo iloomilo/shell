@@ -22,7 +22,7 @@ ColumnLayout {
             from: 0
             to: 360
             loops: Animation.Infinite
-            duration: 1200
+            duration: Motion.durationSpin
         }
     }
 
