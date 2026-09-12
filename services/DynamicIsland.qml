@@ -306,4 +306,27 @@ Singleton {
             } catch (e) {}
         }
     }
+
+    readonly property bool isLauncher: mode === "launcher"
+
+    function openLauncher() {
+        mode = "launcher";
+        priority = 100;
+    }
+
+    function closeLauncher() {
+        if (mode === "launcher") {
+            mode = hasMedia ? "media" : "clock";
+            priority = hasMedia ? 5 : 0;
+        }
+    }
+
+    function toggleLauncher() {
+        if (isLauncher) {
+            closeLauncher();
+        } else {
+            openLauncher();
+        }
+    }
 }
+

@@ -25,10 +25,12 @@ Container {
         return m + ":" + (s < 10 ? "0" : "") + s;
     }
 
-    readonly property bool isMediaExpanded: DynamicIsland.hasMedia && root.isHovered && DynamicIsland.mode !== "notification" && DynamicIsland.mode !== "osd"
-    readonly property bool isMorphExpanding: isMediaExpanded || DynamicIsland.mode === "notification" || DynamicIsland.mode === "osd"
+    readonly property bool isMediaExpanded: DynamicIsland.hasMedia && root.isHovered && DynamicIsland.mode !== "notification" && DynamicIsland.mode !== "osd" && DynamicIsland.mode !== "launcher"
+    readonly property bool isMorphExpanding: DynamicIsland.isLauncher || isMediaExpanded || DynamicIsland.mode === "notification" || DynamicIsland.mode === "osd"
 
     readonly property string activeView: {
+        if (DynamicIsland.mode === "launcher")
+            return "launcher";
         if (DynamicIsland.mode === "notification")
             return "notification";
         if (DynamicIsland.mode === "osd")
@@ -42,7 +44,13 @@ Container {
 
     onActiveViewChanged: {
         viewReady = false;
-        viewDelay.interval = activeView === "compact" ? Motion.collapseStagger : Motion.contentStagger;
+        if (activeView === "launcher") {
+            viewDelay.interval = 180;
+        } else if (activeView === "compact") {
+            viewDelay.interval = Motion.collapseStagger;
+        } else {
+            viewDelay.interval = Motion.contentStagger;
+        }
         viewDelay.restart();
     }
 
@@ -59,6 +67,8 @@ Container {
     }
 
     height: {
+        if (DynamicIsland.mode === "launcher")
+            return 420;
         if (DynamicIsland.mode === "notification")
             return 50;
         if (isMediaExpanded)
@@ -67,6 +77,8 @@ Container {
     }
 
     width: {
+        if (DynamicIsland.mode === "launcher")
+            return 480;
         if (DynamicIsland.mode === "notification")
             return 340;
         if (DynamicIsland.mode === "osd")
@@ -78,19 +90,28 @@ Container {
         return timeText.implicitWidth + 28;
     }
 
-    radius: (isMediaExpanded || DynamicIsland.mode === "notification") ? Metrics.radiusContainer : Metrics.radiusPill
+    radius: (DynamicIsland.mode === "launcher" || isMediaExpanded || DynamicIsland.mode === "notification") ? Metrics.radiusContainer : Metrics.radiusPill
     clip: true
 
     Behavior on width {
-        MorphAnimation { expanding: root.isMorphExpanding }
+        NumberAnimation {
+            duration: root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit
+            easing.type: Easing.OutCubic
+        }
     }
 
     Behavior on height {
-        MorphAnimation { expanding: root.isMorphExpanding }
+        NumberAnimation {
+            duration: root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit
+            easing.type: Easing.OutCubic
+        }
     }
 
     Behavior on radius {
-        MorphAnimation { expanding: root.isMorphExpanding }
+        NumberAnimation {
+            duration: root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit
+            easing.type: Easing.OutCubic
+        }
     }
 
     Item {
@@ -573,6 +594,28 @@ Container {
                 pixelSize: 16
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: DynamicIsland.dismiss()
+            }
+        }
+    }
+
+    LauncherView {
+        anchors.fill: parent
+        opacity: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.0
+        scale: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.96
+        transformOrigin: Item.Center
+        visible: opacity > 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Motion.durationNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: Motion.durationNormal
+                easing.type: Easing.OutCubic
             }
         }
     }

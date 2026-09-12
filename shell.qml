@@ -1,19 +1,36 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Io
 import QtQuick
 import qs.theme
 import qs.components
+import qs.services as Services
 import qs.modules.workspaces
 import qs.modules.dynamicisland
 import qs.modules.status
 
 ShellRoot {
+    IpcHandler {
+        target: "launcher"
+        function toggle() {
+            Services.DynamicIsland.toggleLauncher();
+        }
+        function open() {
+            Services.DynamicIsland.openLauncher();
+        }
+        function close() {
+            Services.DynamicIsland.closeLauncher();
+        }
+    }
+
     PanelWindow {
         id: root
 
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: statusIsland.requiresKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-        implicitHeight: 400
+        WlrLayershell.keyboardFocus: Services.DynamicIsland.isLauncher 
+            ? WlrKeyboardFocus.Exclusive 
+            : (statusIsland.requiresKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
+        implicitHeight: 500
         color: "transparent"
         exclusiveZone: Metrics.exclusiveZone
 
@@ -28,7 +45,7 @@ ShellRoot {
                 item: workspacesIsland
             }
             Region {
-                item: dynamicIsland
+                item: dynamicHitArea
             }
             Region {
                 item: statusHitArea
@@ -52,6 +69,29 @@ ShellRoot {
                 id: dynamicIsland
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
+            }
+
+            Item {
+                id: dynamicHitArea
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                width: (Services.DynamicIsland.isLauncher || dynamicCollapseTimer.running) ? 480 : dynamicIsland.width
+                height: (Services.DynamicIsland.isLauncher || dynamicCollapseTimer.running) ? 420 : dynamicIsland.height
+            }
+
+            Timer {
+                id: dynamicCollapseTimer
+                interval: Motion.morphExit + 30
+                repeat: false
+            }
+
+            Connections {
+                target: Services.DynamicIsland
+                function onIsLauncherChanged() {
+                    if (!Services.DynamicIsland.isLauncher) {
+                        dynamicCollapseTimer.restart();
+                    }
+                }
             }
 
             Item {
