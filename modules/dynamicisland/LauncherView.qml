@@ -22,8 +22,10 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
+            activeIndicator.animateMotion = false;
             LauncherService.reset();
             focusTimer.restart();
+            reEnableTimer.restart();
         }
     }
 
@@ -35,6 +37,13 @@ Item {
             searchInput.forceActiveFocus();
             searchInput.selectAll();
         }
+    }
+
+    Timer {
+        id: reEnableTimer
+        interval: 40
+        repeat: false
+        onTriggered: activeIndicator.animateMotion = true
     }
 
     ColumnLayout {
@@ -85,9 +94,11 @@ Item {
 
                         text: LauncherService.query
                         onTextChanged: {
+                            activeIndicator.animateMotion = false;
                             if (LauncherService.query !== text) {
                                 LauncherService.query = text;
                             }
+                            reEnableTimer.restart();
                         }
 
                         Keys.onPressed: event => {
@@ -263,27 +274,31 @@ Item {
                 boundsBehavior: Flickable.StopAtBounds
                 currentIndex: LauncherService.selectedIndex
 
-                highlightFollowsCurrentItem: true
-                highlightMoveDuration: 0
-
-                highlight: Rectangle {
+                Rectangle {
+                    id: activeIndicator
+                    parent: appList.contentItem
+                    x: 0
                     width: appList.width
-                    height: 50
-                    radius: 10
+                    height: 48
+                    radius: 8
                     color: Colors.surface_container_highest
-                    visible: appList.count > 0
+                    visible: appList.count > 0 && LauncherService.results.length > 0
                     z: 0
 
+                    property bool animateMotion: true
+
+                    y: LauncherService.selectedIndex >= 0 ? (LauncherService.selectedIndex * (48 + appList.spacing)) : 0
+
                     Behavior on y {
-                        SpringAnimation {
-                            spring: 5.0
-                            damping: 0.55
-                            epsilon: 0.25
+                        enabled: activeIndicator.animateMotion && root.visible
+                        NumberAnimation {
+                            duration: 160
+                            easing.type: Easing.OutCubic
                         }
                     }
                 }
 
-                delegate: Rectangle {
+                delegate: Item {
                     id: delegateRoot
                     required property var modelData
                     required property int index
@@ -291,14 +306,52 @@ Item {
                     readonly property bool isSelected: index === LauncherService.selectedIndex
 
                     width: appList.width
-                    height: 50
-                    radius: 10
-                    color: (itemHover.hovered && !isSelected) 
-                        ? Qt.rgba(Colors.surface_container_high.r, Colors.surface_container_high.g, Colors.surface_container_high.b, 0.4) 
-                        : "transparent"
+                    height: 48
+                    z: 1
 
-                    Behavior on color {
-                        ColorAnimation { duration: Motion.durationFast }
+                    opacity: 0.0
+                    transform: Translate {
+                        id: itemTrans
+                        y: 8
+                    }
+
+                    Timer {
+                        id: staggerTimer
+                        interval: Math.min(index * 22, 160)
+                        running: true
+                        repeat: false
+                        onTriggered: enterAnim.start()
+                    }
+
+                    ParallelAnimation {
+                        id: enterAnim
+                        NumberAnimation {
+                            target: delegateRoot
+                            property: "opacity"
+                            to: 1.0
+                            duration: 180
+                            easing.type: Easing.OutCubic
+                        }
+                        NumberAnimation {
+                            target: itemTrans
+                            property: "y"
+                            to: 0
+                            duration: 200
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 8
+                        color: (itemHover.hovered && !delegateRoot.isSelected) 
+                            ? Qt.rgba(Colors.surface_container_high.r, Colors.surface_container_high.g, Colors.surface_container_high.b, 0.4) 
+                            : "transparent"
+                        z: 0
+
+                        Behavior on color {
+                            ColorAnimation { duration: Motion.durationFast }
+                        }
                     }
 
                     RowLayout {
