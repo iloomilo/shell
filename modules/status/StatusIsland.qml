@@ -21,6 +21,7 @@ Rectangle {
     readonly property bool showsWifi: displayMenu === "wifi"
     readonly property bool showsBluetooth: displayMenu === "bluetooth"
     readonly property bool showsPower: displayMenu === "power"
+    readonly property bool requiresKeyboard: showsWifi && wifiMenu.passwordPromptSsid !== ""
 
     onCurrentMenuChanged: {
         if (currentMenu !== "")
@@ -528,6 +529,7 @@ Rectangle {
         }
 
         WifiMenu {
+            id: wifiMenu
             visible: root.showsWifi
         }
 

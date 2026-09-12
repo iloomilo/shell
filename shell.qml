@@ -17,7 +17,7 @@ ShellRoot {
         id: root
 
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: statusIsland.isExpanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+        WlrLayershell.keyboardFocus: statusIsland.requiresKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         implicitHeight: 400
         color: "transparent"
         exclusiveZone: Metrics.exclusiveZone
@@ -36,7 +36,7 @@ ShellRoot {
                 item: dynamicIsland
             }
             Region {
-                item: statusIsland
+                item: statusHitArea
             }
         }
 
@@ -57,6 +57,29 @@ ShellRoot {
                 id: dynamicIsland
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
+            }
+
+            Item {
+                id: statusHitArea
+                anchors.right: parent.right
+                anchors.top: parent.top
+                width: (statusIsland.isExpanded || collapseTimer.running) ? Metrics.expandedWidth : statusIsland.collapsedWidth
+                height: (statusIsland.isExpanded || collapseTimer.running) ? Metrics.expandedHeight : Metrics.islandHeight
+            }
+
+            Timer {
+                id: collapseTimer
+                interval: Motion.morphExit + 30
+                repeat: false
+            }
+
+            Connections {
+                target: statusIsland
+                function onIsExpandedChanged() {
+                    if (!statusIsland.isExpanded) {
+                        collapseTimer.restart();
+                    }
+                }
             }
 
             StatusIsland {
