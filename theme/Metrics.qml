@@ -14,10 +14,10 @@ Singleton {
     readonly property real itemSpacing: 10
     readonly property real layoutSpacing: 6
 
-    readonly property real radiusSmall: 4
-    readonly property real radiusCard: 12
-    readonly property real radiusPill: 16
-    readonly property real radiusContainer: 24
+    readonly property real radiusSmall: 3
+    readonly property real radiusCard: 6
+    readonly property real radiusPill: 8
+    readonly property real radiusContainer: 12
 
     readonly property real itemHeightNormal: 38
     readonly property real itemHeightActive: 42
