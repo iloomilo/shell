@@ -21,10 +21,15 @@ Item {
     property real gap: 4
 
     signal moved(real value)
+    signal committed(real value)
+
+    property real dragValue: 0.0
+
+    readonly property real currentDisplayValue: isPressed ? dragValue : value
 
     readonly property real normalizedValue: {
         if (to === from) return 0;
-        return Math.max(0.0, Math.min(1.0, (value - from) / (to - from)));
+        return Math.max(0.0, Math.min(1.0, (currentDisplayValue - from) / (to - from)));
     }
 
     readonly property bool isPressed: mouseArea.pressed
@@ -52,13 +57,21 @@ Item {
                 rawValue = Math.round(rawValue / root.stepSize) * root.stepSize;
             }
             let clamped = Math.max(root.from, Math.min(root.to, rawValue));
-            root.value = clamped;
+            root.dragValue = clamped;
             root.moved(clamped);
         }
 
         onPressed: mouse => updateValue(mouse.x)
         onPositionChanged: mouse => {
             if (pressed) updateValue(mouse.x)
+        }
+        onReleased: {
+            root.value = root.dragValue;
+            root.committed(root.dragValue);
+        }
+        onCanceled: {
+            root.value = root.dragValue;
+            root.committed(root.dragValue);
         }
     }
 

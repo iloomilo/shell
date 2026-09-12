@@ -336,72 +336,27 @@ Container {
                 spacing: 8
 
                 StyledText {
-                    text: root.formatTime(seekTrack.isDragging ? (seekTrack.dragProgress * DynamicIsland.length) : DynamicIsland.currentPosition)
+                    text: root.formatTime(mediaSlider.isPressed ? (mediaSlider.dragValue * DynamicIsland.length) : DynamicIsland.currentPosition)
                     font.pixelSize: 10
                     color: Colors.on_surface_variant
                     Layout.alignment: Qt.AlignVCenter
                 }
 
-                Rectangle {
-                    id: seekTrack
+                Slider {
+                    id: mediaSlider
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
-                    height: 4
-                    radius: 2
-                    color: Colors.surface_container_highest
-
-                    property bool isDragging: false
-                    property real dragProgress: 0.0
-
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: parent.width * Math.min(1.0, Math.max(0.0, seekTrack.isDragging ? seekTrack.dragProgress : DynamicIsland.progress))
-                        radius: 2
-                        color: Colors.primary
-                    }
-
-                    Rectangle {
-                        width: 10
-                        height: 10
-                        radius: 5
-                        color: Colors.primary
-                        x: Math.max(0, Math.min(parent.width - width, parent.width * (seekTrack.isDragging ? seekTrack.dragProgress : DynamicIsland.progress) - 5))
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    MouseArea {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.topMargin: -10
-                        anchors.bottomMargin: -10
-                        cursorShape: Qt.PointingHandCursor
-                        preventStealing: true
-
-                        onPressed: mouse => {
-                            seekTrack.isDragging = true;
-                            seekTrack.dragProgress = Math.max(0, Math.min(seekTrack.width, mouse.x)) / (seekTrack.width || 1);
-                        }
-
-                        onPositionChanged: mouse => {
-                            if (pressed) {
-                                seekTrack.dragProgress = Math.max(0, Math.min(seekTrack.width, mouse.x)) / (seekTrack.width || 1);
-                            }
-                        }
-
-                        onReleased: mouse => {
-                            if (seekTrack.isDragging) {
-                                let ratio = Math.max(0, Math.min(seekTrack.width, mouse.x)) / (seekTrack.width || 1);
-                                DynamicIsland.seekRatio(ratio);
-                                seekTrack.isDragging = false;
-                            }
-                        }
-
-                        onCanceled: seekTrack.isDragging = false
-                    }
+                    trackHeight: 6
+                    thumbWidth: 4
+                    thumbHeight: 18
+                    thumbPressedHeight: 22
+                    gap: 3
+                    implicitHeight: 24
+                    value: DynamicIsland.progress
+                    activeColor: Colors.primary
+                    thumbColor: Colors.primary
+                    inactiveColor: Colors.surface_container_highest
+                    onCommitted: ratio => DynamicIsland.seekRatio(ratio)
                 }
 
                 StyledText {
