@@ -161,6 +161,7 @@ Container {
                     anchors.fill: parent
                     source: DynamicIsland.trackArt
                     fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
                     visible: false
                 }
 
@@ -274,6 +275,7 @@ Container {
                         anchors.fill: parent
                         source: DynamicIsland.trackArt
                         fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
                         visible: false
                     }
 
