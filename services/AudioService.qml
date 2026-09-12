@@ -29,7 +29,7 @@ Singleton {
         if (!nodes) return list;
         for (let i = 0; i < nodes.length; i++) {
             let n = nodes[i];
-            if (n && n.isSink) {
+            if (n && n.isSink && !n.isStream) {
                 list.push(n);
             }
         }
