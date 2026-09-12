@@ -4,7 +4,7 @@ import Quickshell
 import QtQuick
 
 Singleton {
-    readonly property real exclusiveZone: 24
+    readonly property real exclusiveZone: 40
     readonly property real barTopMargin: 8
     readonly property real barSideMargin: 12
 
