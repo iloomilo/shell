@@ -35,12 +35,12 @@ Singleton {
     readonly property int durationMedium4: 400
     readonly property int durationLong2: 500
 
-    readonly property int morphEnter: 280
-    readonly property int morphExit: 220
+    readonly property int morphEnter: durationMedium4
+    readonly property int morphExit: durationMedium2
     readonly property int contentEnter: durationShort4
     readonly property int contentExit: durationShort2
-    readonly property int contentStagger: 180
-    readonly property int collapseStagger: 150
+    readonly property int contentStagger: durationMedium1
+    readonly property int collapseStagger: durationShort4
     readonly property int collapseEnter: durationShort2
     readonly property int contentFade: durationShort2
 }
