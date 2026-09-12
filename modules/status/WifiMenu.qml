@@ -253,7 +253,10 @@ Item {
                             color: Colors.on_surface
                             font.family: Typography.family
                             font.pixelSize: Typography.sizeBody
+                            font.letterSpacing: root.showPassword ? 0 : 3
                             echoMode: root.showPassword ? TextInput.Normal : TextInput.Password
+                            passwordCharacter: "●"
+                            passwordMaskDelay: 800
                             clip: true
                             focus: true
                             activeFocusOnTab: true
