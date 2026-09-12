@@ -98,13 +98,48 @@ Singleton {
         }
     }
 
-    function connect(targetSsid) {
+    property var savedConnections: []
+
+    function isSaved(targetSsid) {
+        if (!targetSsid || !savedConnections) return false;
+        return savedConnections.indexOf(targetSsid) !== -1;
+    }
+
+    function updateSaved() {
+        if (!savedProc.running) {
+            savedProc.running = true;
+        }
+    }
+
+    function connect(targetSsid, password) {
         if (connectProc.running)
             return;
         root.failedSsid = "";
         root.connectingTo = targetSsid;
-        connectProc.command = ["nmcli", "dev", "wifi", "connect", targetSsid];
+        if (password && password.length > 0) {
+            connectProc.command = ["nmcli", "dev", "wifi", "connect", targetSsid, "password", password];
+        } else {
+            connectProc.command = ["nmcli", "dev", "wifi", "connect", targetSsid];
+        }
         connectProc.running = true;
+    }
+
+    Process {
+        id: savedProc
+        command: ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"]
+        stdout: StdioCollector {
+            onTextChanged: {
+                let lines = text.trim().split("\n");
+                let list = [];
+                for (let i = 0; i < lines.length; i++) {
+                    let parts = lines[i].split(":");
+                    if (parts.length >= 2 && parts[1] === "802-11-wireless" && parts[0]) {
+                        list.push(parts[0]);
+                    }
+                }
+                root.savedConnections = list;
+            }
+        }
     }
 
     Process {
@@ -181,6 +216,7 @@ Singleton {
             }
             root.connectingTo = "";
             root.check();
+            root.updateSaved();
             root.scan(true);
         }
     }
@@ -199,6 +235,7 @@ Singleton {
         triggeredOnStart: true
         onTriggered: {
             root.check();
+            root.updateSaved();
             root.scan(false, false);
         }
     }
