@@ -16,13 +16,16 @@ Item {
         // Volume Control Card
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: 64
+            implicitHeight: 78
             radius: Metrics.radiusCard
             color: Colors.surface_container
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.leftMargin: 14
+                anchors.rightMargin: 14
+                anchors.topMargin: 12
+                anchors.bottomMargin: 12
                 spacing: 6
 
                 RowLayout {
@@ -49,11 +52,12 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 10
 
                     IconButton {
                         icon: AudioService.iconName
                         pixelSize: 18
+                        touchTarget: 28
                         Layout.alignment: Qt.AlignVCenter
                         onClicked: AudioService.toggleMute()
                     }
