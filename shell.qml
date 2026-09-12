@@ -81,7 +81,7 @@ ShellRoot {
 
             Timer {
                 id: dynamicCollapseTimer
-                interval: 380
+                interval: Motion.morphExit + 30
                 repeat: false
             }
 
