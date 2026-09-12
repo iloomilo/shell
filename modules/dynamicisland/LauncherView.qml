@@ -173,11 +173,85 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            EmptyState {
+            // Animated Empty State Micro-interaction
+            ColumnLayout {
+                id: emptyStateBox
                 anchors.centerIn: parent
-                visible: LauncherService.results.length === 0
-                icon: "search_off"
-                text: "No applications found"
+                spacing: 12
+                visible: opacity > 0
+                opacity: LauncherService.results.length === 0 ? 1.0 : 0.0
+                scale: LauncherService.results.length === 0 ? 1.0 : 0.85
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 180; easing.type: Motion.easingStandard }
+                }
+                Behavior on scale {
+                    SpringAnimation { spring: 3.5; damping: 0.55; epsilon: 0.01 }
+                }
+
+                // Animated Badge with subtle float
+                Rectangle {
+                    width: 56
+                    height: 56
+                    radius: 16
+                    color: Colors.surface_container_high
+                    border.width: 1
+                    border.color: Colors.outline_variant
+                    Layout.alignment: Qt.AlignHCenter
+
+                    Icon {
+                        id: emptyIcon
+                        anchors.centerIn: parent
+                        text: "search_off"
+                        font.pixelSize: 28
+                        color: Colors.primary
+
+                        SequentialAnimation on y {
+                            running: LauncherService.results.length === 0
+                            loops: Animation.Infinite
+                            NumberAnimation { to: (parent.height - height) / 2 - 3; duration: 1200; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: (parent.height - height) / 2 + 3; duration: 1200; easing.type: Easing.InOutSine }
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    spacing: 3
+                    Layout.alignment: Qt.AlignHCenter
+
+                    StyledText {
+                        text: "No matches found"
+                        font.pixelSize: Typography.sizeBody
+                        font.weight: Typography.weightBold
+                        color: Colors.on_surface
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    StyledText {
+                        text: searchInput.text.length > 0 ? ("Nothing matches \"" + searchInput.text + "\"") : "No applications available"
+                        font.pixelSize: Typography.sizeCaption
+                        color: Colors.on_surface_variant
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+
+                // Suggestion chip
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: 4
+                    implicitWidth: tipText.implicitWidth + 20
+                    implicitHeight: 24
+                    radius: 12
+                    color: Colors.surface_container
+
+                    StyledText {
+                        id: tipText
+                        anchors.centerIn: parent
+                        text: "Check spelling or try generic terms"
+                        font.pixelSize: Typography.sizeSmall
+                        color: Colors.outline
+                    }
+                }
             }
 
             ListView {
@@ -187,6 +261,27 @@ Item {
                 spacing: 4
                 model: LauncherService.results
                 boundsBehavior: Flickable.StopAtBounds
+                currentIndex: LauncherService.selectedIndex
+
+                highlightFollowsCurrentItem: true
+                highlightMoveDuration: 0
+
+                highlight: Rectangle {
+                    width: appList.width
+                    height: 50
+                    radius: 10
+                    color: Colors.surface_container_highest
+                    visible: appList.count > 0
+                    z: 0
+
+                    Behavior on y {
+                        SpringAnimation {
+                            spring: 5.0
+                            damping: 0.55
+                            epsilon: 0.25
+                        }
+                    }
+                }
 
                 delegate: Rectangle {
                     id: delegateRoot
@@ -198,9 +293,9 @@ Item {
                     width: appList.width
                     height: 50
                     radius: 10
-                    color: isSelected 
-                        ? Colors.surface_container_highest 
-                        : (itemHover.hovered ? Colors.surface_container_high : "transparent")
+                    color: (itemHover.hovered && !isSelected) 
+                        ? Qt.rgba(Colors.surface_container_high.r, Colors.surface_container_high.g, Colors.surface_container_high.b, 0.4) 
+                        : "transparent"
 
                     Behavior on color {
                         ColorAnimation { duration: Motion.durationFast }
@@ -211,6 +306,7 @@ Item {
                         anchors.leftMargin: 10
                         anchors.rightMargin: 12
                         spacing: 12
+                        z: 1
 
                         // App Icon
                         Item {
