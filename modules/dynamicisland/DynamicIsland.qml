@@ -47,7 +47,7 @@ Container {
         if (activeView === "launcher") {
             viewDelay.interval = 180;
         } else if (activeView === "compact") {
-            viewDelay.interval = Motion.collapseStagger;
+            viewDelay.interval = 320;
         } else {
             viewDelay.interval = Motion.contentStagger;
         }
@@ -60,6 +60,46 @@ Container {
         onTriggered: root.viewReady = true
     }
 
+    property bool launcherWidthActive: DynamicIsland.mode === "launcher"
+    property bool launcherHeightActive: false
+
+    Timer {
+        id: launcherExpandTimer
+        interval: 150
+        repeat: false
+        onTriggered: {
+            if (DynamicIsland.mode === "launcher") {
+                root.launcherHeightActive = true;
+            }
+        }
+    }
+
+    Timer {
+        id: launcherCollapseTimer
+        interval: 170
+        repeat: false
+        onTriggered: {
+            if (DynamicIsland.mode !== "launcher") {
+                root.launcherWidthActive = false;
+            }
+        }
+    }
+
+    Connections {
+        target: DynamicIsland
+        function onModeChanged() {
+            if (DynamicIsland.mode === "launcher") {
+                launcherCollapseTimer.stop();
+                root.launcherWidthActive = true;
+                launcherExpandTimer.restart();
+            } else {
+                launcherExpandTimer.stop();
+                root.launcherHeightActive = false;
+                launcherCollapseTimer.restart();
+            }
+        }
+    }
+
     property real morphProgress: activeView === "media" ? 1.0 : 0.0
 
     Behavior on morphProgress {
@@ -67,7 +107,7 @@ Container {
     }
 
     height: {
-        if (DynamicIsland.mode === "launcher")
+        if (root.launcherHeightActive)
             return 420;
         if (DynamicIsland.mode === "notification")
             return 50;
@@ -77,7 +117,7 @@ Container {
     }
 
     width: {
-        if (DynamicIsland.mode === "launcher")
+        if (root.launcherWidthActive)
             return 480;
         if (DynamicIsland.mode === "notification")
             return 340;
@@ -90,30 +130,27 @@ Container {
         return timeText.implicitWidth + 28;
     }
 
-    radius: (DynamicIsland.mode === "launcher" || isMediaExpanded || DynamicIsland.mode === "notification") ? Metrics.radiusContainer : Metrics.radiusPill
+    radius: (root.launcherHeightActive || isMediaExpanded || DynamicIsland.mode === "notification") ? Metrics.radiusContainer : Metrics.radiusPill
     clip: true
 
     Behavior on width {
-        SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
-            epsilon: Motion.springEpsilon
+        NumberAnimation {
+            duration: 180
+            easing.type: Easing.OutCubic
         }
     }
 
     Behavior on height {
-        SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
-            epsilon: Motion.springEpsilon
+        NumberAnimation {
+            duration: 200
+            easing.type: Easing.OutCubic
         }
     }
 
     Behavior on radius {
-        SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
-            epsilon: Motion.springEpsilon
+        NumberAnimation {
+            duration: 180
+            easing.type: Easing.OutCubic
         }
     }
 
@@ -602,23 +639,22 @@ Container {
 
     LauncherView {
         anchors.fill: parent
-        opacity: root.activeView === "launcher" ? 1.0 : 0.0
-        scale: root.activeView === "launcher" ? 1.0 : 0.96
-        transformOrigin: Item.Center
+        opacity: (root.activeView === "launcher" && root.launcherHeightActive) ? 1.0 : 0.0
+        scale: (root.activeView === "launcher" && root.launcherHeightActive) ? 1.0 : 0.96
+        transformOrigin: Item.Top
         visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Motion.durationNormal
-                easing.type: Motion.easingStandard
+                duration: (root.activeView === "launcher" && root.launcherHeightActive) ? 160 : 100
+                easing.type: Easing.OutCubic
             }
         }
 
         Behavior on scale {
-            SpringAnimation {
-                spring: Motion.springStiffness
-                damping: Motion.springDamping
-                epsilon: Motion.springScaleEpsilon
+            NumberAnimation {
+                duration: 180
+                easing.type: Easing.OutCubic
             }
         }
     }
