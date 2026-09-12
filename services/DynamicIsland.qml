@@ -102,6 +102,7 @@ Singleton {
     readonly property bool muted: audio ? audio.muted : false
 
     property bool audioInitialized: false
+    property bool suppressVolumeOsd: false
 
     PwObjectTracker {
         objects: [root.sink]
@@ -115,7 +116,7 @@ Singleton {
     }
 
     onVolumeChanged: {
-        if (!audioInitialized)
+        if (!audioInitialized || suppressVolumeOsd)
             return;
         if (root.mode === "notification" && root.priority >= 30)
             return;
@@ -123,7 +124,7 @@ Singleton {
     }
 
     onMutedChanged: {
-        if (!audioInitialized)
+        if (!audioInitialized || suppressVolumeOsd)
             return;
         if (root.mode === "notification" && root.priority >= 30)
             return;

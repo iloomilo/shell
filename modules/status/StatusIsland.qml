@@ -8,14 +8,16 @@ Rectangle {
     id: root
 
     property string currentMenu: ""
-    property string lastMenu: "wifi"
+    property string lastMenu: "audio"
 
     readonly property bool isExpanded: currentMenu !== ""
+    readonly property bool isAudio: currentMenu === "audio"
     readonly property bool isWifi: currentMenu === "wifi"
     readonly property bool isBluetooth: currentMenu === "bluetooth"
     readonly property bool isPower: currentMenu === "power"
 
     readonly property string displayMenu: currentMenu !== "" ? currentMenu : lastMenu
+    readonly property bool showsAudio: displayMenu === "audio"
     readonly property bool showsWifi: displayMenu === "wifi"
     readonly property bool showsBluetooth: displayMenu === "bluetooth"
     readonly property bool showsPower: displayMenu === "power"
@@ -75,8 +77,8 @@ Rectangle {
 
     readonly property real itemSpacing: Metrics.itemSpacing
     readonly property real sidePadding: Metrics.sidePadding
-    readonly property real collapsedLeftX: sidePadding
-    readonly property real collapsedWifiX: collapsedLeftX + leftGroup.width + itemSpacing
+    readonly property real collapsedAudioX: sidePadding
+    readonly property real collapsedWifiX: collapsedAudioX + audioHero.width + itemSpacing
     readonly property real collapsedBtX: collapsedWifiX + wifiHero.width + itemSpacing
     readonly property real collapsedBatteryX: collapsedBtX + btHero.width + itemSpacing
     readonly property real collapsedPowerX: collapsedBatteryX + batteryGroup.width + itemSpacing + 8
@@ -106,38 +108,6 @@ Rectangle {
     }
 
     RowLayout {
-        id: leftGroup
-        width: implicitWidth
-        height: Metrics.islandHeight
-        spacing: 0
-        x: root.isExpanded ? (-leftGroup.width - 20) : root.collapsedLeftX
-        y: 0
-        opacity: root.collapsedVisible ? 1.0 : 0.0
-        scale: root.isExpanded ? 0.8 : 1.0
-        visible: opacity > 0
-
-        Behavior on x {
-            enabled: root.isExpanded || root.menuTransitioning
-            MorphAnimation { expanding: root.isExpanded }
-        }
-        Behavior on opacity {
-            NumberAnimation {
-                    duration: Motion.contentFade
-                    easing.type: Easing.Bezier
-                    easing.bezierCurve: Motion.standard
-                }
-        }
-        Behavior on scale {
-            MorphAnimation { expanding: root.isExpanded }
-        }
-
-        Audio {
-            id: audioModule
-            Layout.alignment: Qt.AlignVCenter
-        }
-    }
-
-    RowLayout {
         id: batteryGroup
         width: implicitWidth
         height: Metrics.islandHeight
@@ -154,10 +124,10 @@ Rectangle {
         }
         Behavior on opacity {
             NumberAnimation {
-                    duration: Motion.contentFade
-                    easing.type: Easing.Bezier
-                    easing.bezierCurve: Motion.standard
-                }
+                duration: Motion.contentFade
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.standard
+            }
         }
         Behavior on scale {
             MorphAnimation { expanding: root.isExpanded }
@@ -175,16 +145,87 @@ Rectangle {
         width: root.expandedWidth
         height: Metrics.barHeight
 
+        // Audio Hero Icon
+        Item {
+            id: audioHero
+            width: 20
+            height: 20
+            x: root.isAudio 
+                ? root.expandedHeroX 
+                : ((root.isWifi || root.isBluetooth || root.isPower) ? (-width - 20) : root.collapsedAudioX)
+            y: root.isAudio ? ((headerBar.height - height) / 2) : ((Metrics.islandHeight - height) / 2)
+            opacity: (root.isWifi || root.isBluetooth || root.isPower) ? 0.0 : 1.0
+            scale: (root.isWifi || root.isBluetooth || root.isPower) ? 0.8 : 1.0
+            visible: opacity > 0
+
+            Behavior on x {
+                enabled: root.isExpanded || root.menuTransitioning
+                MorphAnimation { expanding: root.isExpanded }
+            }
+            Behavior on y {
+                MorphAnimation { expanding: root.isExpanded }
+            }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Motion.contentFade
+                    easing.type: Easing.Bezier
+                    easing.bezierCurve: Motion.standard
+                }
+            }
+            Behavior on scale {
+                MorphAnimation { expanding: root.isExpanded }
+            }
+
+            Icon {
+                id: audioHeroIcon
+                anchors.centerIn: parent
+                text: AudioService.iconName
+                color: root.isAudio 
+                    ? Colors.primary 
+                    : (AudioService.muted 
+                        ? Colors.error 
+                        : (audioHover.hovered ? Colors.on_surface : Colors.on_surface_variant))
+
+                Behavior on color {
+                    ColorAnimation { duration: Motion.durationNormal }
+                }
+            }
+
+            TapHandler {
+                onTapped: {
+                    if (root.currentMenu === "audio") {
+                        root.currentMenu = "";
+                    } else {
+                        root.currentMenu = "audio";
+                    }
+                }
+            }
+
+            WheelHandler {
+                orientation: Qt.Vertical
+                onWheel: event => {
+                    let step = (event.angleDelta.y > 0 ? 0.05 : -0.05);
+                    AudioService.setVolume(AudioService.volume + step, root.isExpanded);
+                }
+            }
+
+            HoverHandler {
+                id: audioHover
+                cursorShape: Qt.PointingHandCursor
+            }
+        }
+
+        // Wi-Fi Hero Icon
         Item {
             id: wifiHero
             width: 20
             height: 20
             x: root.isWifi 
                 ? root.expandedHeroX 
-                : (root.isBluetooth || root.isPower ? (-width - 20) : root.collapsedWifiX)
+                : (root.isBluetooth || root.isPower ? (-width - 20) : (root.isAudio ? (root.expandedWidth + 20) : root.collapsedWifiX))
             y: root.isWifi ? ((headerBar.height - height) / 2) : ((Metrics.islandHeight - height) / 2)
-            opacity: (root.isBluetooth || root.isPower) ? 0.0 : 1.0
-            scale: (root.isBluetooth || root.isPower) ? 0.8 : 1.0
+            opacity: (root.isAudio || root.isBluetooth || root.isPower) ? 0.0 : 1.0
+            scale: (root.isAudio || root.isBluetooth || root.isPower) ? 0.8 : 1.0
             visible: opacity > 0
 
             Behavior on x {
@@ -239,16 +280,17 @@ Rectangle {
             }
         }
 
+        // Bluetooth Hero Icon
         Item {
             id: btHero
             width: 20
             height: 20
             x: root.isBluetooth 
                 ? root.expandedHeroX 
-                : (root.isPower ? (-width - 20) : (root.isWifi ? (root.expandedWidth + 20) : root.collapsedBtX))
+                : (root.isPower ? (-width - 20) : (root.isAudio || root.isWifi ? (root.expandedWidth + 20) : root.collapsedBtX))
             y: root.isBluetooth ? ((headerBar.height - height) / 2) : ((Metrics.islandHeight - height) / 2)
-            opacity: (root.isWifi || root.isPower) ? 0.0 : 1.0
-            scale: (root.isWifi || root.isPower) ? 0.8 : 1.0
+            opacity: (root.isAudio || root.isWifi || root.isPower) ? 0.0 : 1.0
+            scale: (root.isAudio || root.isWifi || root.isPower) ? 0.8 : 1.0
             visible: opacity > 0
 
             Behavior on x {
@@ -305,16 +347,17 @@ Rectangle {
             }
         }
 
+        // Power Hero Icon
         Item {
             id: powerHero
             width: 20
             height: 20
             x: root.isPower 
                 ? root.expandedHeroX 
-                : (root.isWifi || root.isBluetooth ? (root.expandedWidth + 20) : root.collapsedPowerX)
+                : (root.isAudio || root.isWifi || root.isBluetooth ? (root.expandedWidth + 20) : root.collapsedPowerX)
             y: root.isPower ? ((headerBar.height - height) / 2) : ((Metrics.islandHeight - height) / 2)
-            opacity: (root.isWifi || root.isBluetooth) ? 0.0 : 1.0
-            scale: (root.isWifi || root.isBluetooth) ? 0.8 : 1.0
+            opacity: (root.isAudio || root.isWifi || root.isBluetooth) ? 0.0 : 1.0
+            scale: (root.isAudio || root.isWifi || root.isBluetooth) ? 0.8 : 1.0
             visible: opacity > 0
 
             Behavior on x {
@@ -370,7 +413,7 @@ Rectangle {
             anchors.right: headerActions.left
             anchors.rightMargin: 8
             anchors.verticalCenter: headerBar.verticalCenter
-            text: root.showsPower ? "Power" : (root.showsWifi ? "Wi-Fi" : "Bluetooth")
+            text: root.showsPower ? "Power" : (root.showsAudio ? "Audio" : (root.showsWifi ? "Wi-Fi" : "Bluetooth"))
             font.pixelSize: Typography.sizeTitle
             font.weight: Typography.weightBold
             elide: Text.ElideRight
@@ -404,6 +447,13 @@ Rectangle {
             }
 
             IconButton {
+                visible: root.showsAudio
+                icon: AudioService.muted ? "volume_off" : "volume_up"
+                active: !AudioService.muted
+                onClicked: AudioService.toggleMute()
+            }
+
+            IconButton {
                 visible: root.showsBluetooth
                 icon: Bluetooth.powered ? "power_settings_new" : "power_off"
                 active: Bluetooth.powered
@@ -411,7 +461,7 @@ Rectangle {
             }
 
             IconButton {
-                visible: !root.showsPower
+                visible: root.showsWifi || root.showsBluetooth
                 icon: "refresh"
                 rotating: root.showsWifi ? Network.scanning : Bluetooth.scanning
                 active: root.showsWifi ? Network.scanning : Bluetooth.scanning
@@ -439,16 +489,16 @@ Rectangle {
         anchors.left: parent.left
         anchors.leftMargin: Metrics.sidePadding
         width: root.expandedWidth - 2 * Metrics.sidePadding
-        active: !root.showsPower && (root.showsWifi ? Network.scanning : Bluetooth.scanning)
+        active: (root.showsWifi && Network.scanning) || (root.showsBluetooth && Bluetooth.scanning)
         opacity: root.expandedVisible ? 1.0 : 0.0
         visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation {
-                    duration: Motion.contentFade
-                    easing.type: Easing.Bezier
-                    easing.bezierCurve: Motion.standard
-                }
+                duration: Motion.contentFade
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.standard
+            }
         }
     }
 
@@ -473,10 +523,14 @@ Rectangle {
 
         Behavior on opacity {
             NumberAnimation {
-                    duration: Motion.contentFade
-                    easing.type: Easing.Bezier
-                    easing.bezierCurve: Motion.standard
-                }
+                duration: Motion.contentFade
+                easing.type: Easing.Bezier
+                easing.bezierCurve: Motion.standard
+            }
+        }
+
+        AudioMenu {
+            visible: root.showsAudio
         }
 
         WifiMenu {

@@ -483,7 +483,7 @@ Container {
     Item {
         id: osdView
         anchors.fill: parent
-        opacity: (root.activeView === "osd" && root.viewReady) ? 1.0 : 0.0
+        opacity: root.activeView === "osd" ? 1.0 : 0.0
         visible: opacity > 0
 
         Behavior on opacity {
