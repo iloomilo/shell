@@ -255,7 +255,7 @@ Item {
                             font.pixelSize: Typography.sizeBody
                             font.letterSpacing: root.showPassword ? 0 : 3
                             echoMode: root.showPassword ? TextInput.Normal : TextInput.Password
-                            passwordCharacter: "●"
+                            passwordCharacter: "✦"
                             passwordMaskDelay: 800
                             clip: true
                             focus: true
