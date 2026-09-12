@@ -446,12 +446,6 @@ Rectangle {
                 }
             }
 
-            IconButton {
-                visible: root.showsAudio
-                icon: AudioService.muted ? "volume_off" : "volume_up"
-                active: !AudioService.muted
-                onClicked: AudioService.toggleMute()
-            }
 
             IconButton {
                 visible: root.showsBluetooth
