@@ -218,8 +218,8 @@ Item {
                 implicitHeight: 46
                 radius: Metrics.radiusCard
                 color: Colors.surface_container_high
-                border.width: pwdInput.hasFocus ? 2 : 1
-                border.color: pwdInput.hasFocus ? Colors.primary : Colors.outline_variant
+                border.width: pwdInput.activeFocus ? 2 : 1
+                border.color: pwdInput.activeFocus ? Colors.primary : Colors.outline_variant
 
                 Behavior on border.color {
                     ColorAnimation { duration: Motion.durationFast }
@@ -234,7 +234,7 @@ Item {
                     Icon {
                         text: "key"
                         font.pixelSize: 18
-                        color: pwdInput.hasFocus ? Colors.primary : Colors.on_surface_variant
+                        color: pwdInput.activeFocus ? Colors.primary : Colors.on_surface_variant
                         Layout.alignment: Qt.AlignVCenter
 
                         Behavior on color {
@@ -242,19 +242,43 @@ Item {
                         }
                     }
 
-                    PasswordField {
-                        id: pwdInput
+                    Item {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        placeholderText: "Password"
-                        showPassword: root.showPassword
-                        onAccepted: {
-                            if (pwdInput.text.length > 0 && !Network.connectingTo) {
-                                Network.connect(root.passwordPromptSsid, pwdInput.text);
+
+                        TextInput {
+                            id: pwdInput
+                            anchors.fill: parent
+                            verticalAlignment: TextInput.AlignVCenter
+                            color: Colors.on_surface
+                            font.family: Typography.family
+                            font.pixelSize: Typography.sizeBody
+                            echoMode: root.showPassword ? TextInput.Normal : TextInput.Password
+                            passwordCharacter: "•"
+                            clip: true
+                            focus: true
+                            activeFocusOnTab: true
+                            selectByMouse: true
+
+                            onAccepted: {
+                                if (pwdInput.text.length > 0 && !Network.connectingTo) {
+                                    Network.connect(root.passwordPromptSsid, pwdInput.text);
+                                }
+                            }
+
+                            Keys.onEscapePressed: {
+                                root.passwordPromptSsid = "";
                             }
                         }
-                        onEscapePressed: {
-                            root.passwordPromptSsid = "";
+
+                        StyledText {
+                            anchors.fill: parent
+                            verticalAlignment: Text.AlignVCenter
+                            text: "Password"
+                            font.pixelSize: Typography.sizeBody
+                            color: Colors.outline
+                            visible: pwdInput.text.length === 0 && !pwdInput.activeFocus
+                            enabled: false
                         }
                     }
 
