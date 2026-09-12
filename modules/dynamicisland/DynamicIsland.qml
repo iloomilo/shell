@@ -94,23 +94,26 @@ Container {
     clip: true
 
     Behavior on width {
-        NumberAnimation {
-            duration: root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit
-            easing.type: Easing.OutCubic
+        SpringAnimation {
+            spring: Motion.springStiffness
+            damping: Motion.springDamping
+            epsilon: Motion.springEpsilon
         }
     }
 
     Behavior on height {
-        NumberAnimation {
-            duration: root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit
-            easing.type: Easing.OutCubic
+        SpringAnimation {
+            spring: Motion.springStiffness
+            damping: Motion.springDamping
+            epsilon: Motion.springEpsilon
         }
     }
 
     Behavior on radius {
-        NumberAnimation {
-            duration: root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit
-            easing.type: Easing.OutCubic
+        SpringAnimation {
+            spring: Motion.springStiffness
+            damping: Motion.springDamping
+            epsilon: Motion.springEpsilon
         }
     }
 
@@ -229,9 +232,8 @@ Container {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Motion.contentFade
-                easing.type: Easing.Bezier
-                easing.bezierCurve: Motion.standard
+                duration: Motion.durationFast
+                easing.type: Motion.easingStandard
             }
         }
     }
@@ -600,22 +602,23 @@ Container {
 
     LauncherView {
         anchors.fill: parent
-        opacity: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.0
-        scale: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.96
+        opacity: root.activeView === "launcher" ? 1.0 : 0.0
+        scale: root.activeView === "launcher" ? 1.0 : 0.96
         transformOrigin: Item.Center
         visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation {
                 duration: Motion.durationNormal
-                easing.type: Easing.OutCubic
+                easing.type: Motion.easingStandard
             }
         }
 
         Behavior on scale {
-            NumberAnimation {
-                duration: Motion.durationNormal
-                easing.type: Easing.OutCubic
+            SpringAnimation {
+                spring: Motion.springStiffness
+                damping: Motion.springDamping
+                epsilon: Motion.springScaleEpsilon
             }
         }
     }
