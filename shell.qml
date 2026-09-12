@@ -16,7 +16,7 @@ ShellRoot {
     PanelWindow {
         id: root
 
-        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.keyboardFocus: statusIsland.isExpanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         implicitHeight: 400
         color: "transparent"
