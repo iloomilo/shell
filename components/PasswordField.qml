@@ -9,6 +9,8 @@ Item {
     property bool showPassword: false
     readonly property bool hasFocus: hiddenInput.activeFocus
 
+    property int activeUnmaskedIndex: -1
+
     signal accepted()
     signal escapePressed()
 
@@ -18,6 +20,22 @@ Item {
 
     implicitHeight: 32
     implicitWidth: 200
+
+    onTextChanged: {
+        if (!root.showPassword && hiddenInput.text.length > 0) {
+            root.activeUnmaskedIndex = hiddenInput.text.length - 1;
+            maskTimer.restart();
+        } else {
+            root.activeUnmaskedIndex = -1;
+        }
+    }
+
+    Timer {
+        id: maskTimer
+        interval: 400
+        repeat: false
+        onTriggered: root.activeUnmaskedIndex = -1
+    }
 
     TextInput {
         id: hiddenInput
@@ -93,29 +111,12 @@ Item {
             required property int index
 
             readonly property string charVal: index < hiddenInput.text.length ? hiddenInput.text.charAt(index) : ""
-            property bool isMorphed: false
+            readonly property bool isRevealed: root.showPassword || (index === root.activeUnmaskedIndex)
 
             width: Math.max(12, charText.implicitWidth + 2)
             height: 24
 
-            Timer {
-                id: morphTimer
-                interval: 450
-                running: !root.showPassword
-                repeat: false
-                onTriggered: charDelegate.isMorphed = true
-            }
-
-            Connections {
-                target: root
-                function onShowPasswordChanged() {
-                    if (!root.showPassword) {
-                        charDelegate.isMorphed = true;
-                    }
-                }
-            }
-
-            // The typed character (scales down into dot)
+            // The typed character (visible only if revealed, then morphs into dot)
             Text {
                 id: charText
                 anchors.centerIn: parent
@@ -124,8 +125,8 @@ Item {
                 font.pixelSize: Typography.sizeBody
                 font.weight: Typography.weightBold
                 color: Colors.on_surface
-                opacity: (root.showPassword || !charDelegate.isMorphed) ? 1.0 : 0.0
-                scale: (root.showPassword || !charDelegate.isMorphed) ? 1.0 : 0.2
+                opacity: charDelegate.isRevealed ? 1.0 : 0.0
+                scale: charDelegate.isRevealed ? 1.0 : 0.2
 
                 Behavior on opacity {
                     NumberAnimation {
@@ -144,7 +145,7 @@ Item {
                 }
             }
 
-            // The morphed Material Dot (scales up from character)
+            // The Material Dot (visible for all masked characters)
             Rectangle {
                 id: dot
                 anchors.centerIn: parent
@@ -152,8 +153,8 @@ Item {
                 height: 8
                 radius: 4
                 color: Colors.primary
-                opacity: (!root.showPassword && charDelegate.isMorphed) ? 1.0 : 0.0
-                scale: (!root.showPassword && charDelegate.isMorphed) ? 1.0 : 0.2
+                opacity: !charDelegate.isRevealed ? 1.0 : 0.0
+                scale: !charDelegate.isRevealed ? 1.0 : 0.2
 
                 Behavior on opacity {
                     NumberAnimation {
