@@ -40,10 +40,33 @@ Rectangle {
         }
     }
 
+    HoverHandler {
+        id: islandHover
+        onHoveredChanged: {
+            if (root.isExpanded && !hovered && !root.requiresKeyboard) {
+                autoCloseTimer.restart();
+            } else if (hovered) {
+                autoCloseTimer.stop();
+            }
+        }
+    }
+
+    Timer {
+        id: autoCloseTimer
+        interval: 300
+        repeat: false
+        onTriggered: {
+            if (root.isExpanded && !islandHover.hovered && !root.requiresKeyboard) {
+                root.currentMenu = "";
+            }
+        }
+    }
+
     property bool expandedVisible: false
     property bool collapsedVisible: true
 
     onIsExpandedChanged: {
+        autoCloseTimer.stop();
         menuTransitioning = true;
         menuTransitionTimer.restart();
 

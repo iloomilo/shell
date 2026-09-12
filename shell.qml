@@ -8,11 +8,6 @@ import qs.modules.dynamicisland
 import qs.modules.status
 
 ShellRoot {
-    DismissOverlay {
-        active: statusIsland.isExpanded
-        onDismissed: statusIsland.currentMenu = ""
-    }
-
     PanelWindow {
         id: root
 
