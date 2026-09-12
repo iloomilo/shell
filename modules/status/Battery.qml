@@ -61,7 +61,7 @@ RowLayout {
     Icon {
         id: batteryIcon
         text: root.iconName
-        color: root.isLow ? Colors.error : (root.isCharging ? Colors.tertiary : (hover.hovered ? Colors.on_surface : Colors.on_surface_variant))
+        color: root.isLow ? Colors.error : (root.isCharging ? Colors.primary : (hover.hovered ? Colors.on_surface : Colors.on_surface_variant))
         Layout.alignment: Qt.AlignVCenter
 
         Behavior on color {
@@ -147,7 +147,7 @@ RowLayout {
 
                 StyledText {
                     text: root.percent + "%"
-                    color: root.isLow ? Colors.error : (root.isCharging ? Colors.tertiary : Colors.on_surface)
+                    color: root.isLow ? Colors.error : (root.isCharging ? Colors.primary : Colors.on_surface)
                     font.pixelSize: Typography.sizeTitle
                     font.weight: Typography.weightBold
                     Layout.alignment: Qt.AlignHCenter
