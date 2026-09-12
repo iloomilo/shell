@@ -95,24 +95,24 @@ Container {
 
     Behavior on width {
         SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
+            spring: root.isMorphExpanding ? 5.2 : 3.6
+            damping: root.isMorphExpanding ? 0.50 : 0.46
             epsilon: Motion.springEpsilon
         }
     }
 
     Behavior on height {
         SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
+            spring: root.isMorphExpanding ? 3.3 : 4.8
+            damping: root.isMorphExpanding ? 0.44 : 0.50
             epsilon: Motion.springEpsilon
         }
     }
 
     Behavior on radius {
         SpringAnimation {
-            spring: Motion.springStiffness
-            damping: Motion.springDamping
+            spring: 4.5
+            damping: 0.50
             epsilon: Motion.springEpsilon
         }
     }
@@ -604,7 +604,7 @@ Container {
         anchors.fill: parent
         opacity: root.activeView === "launcher" ? 1.0 : 0.0
         scale: root.activeView === "launcher" ? 1.0 : 0.96
-        transformOrigin: Item.Center
+        transformOrigin: Item.Top
         visible: opacity > 0
 
         Behavior on opacity {
