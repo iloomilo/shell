@@ -215,7 +215,7 @@ Container {
         font.weight: Typography.weightBold
         z: 10
 
-        readonly property real compactX: DynamicIsland.hasMedia ? 37 : 14
+        readonly property real compactX: (root.width - width) / 2
         readonly property real expandedX: root.width - width - 12
         readonly property real compactY: (Metrics.islandHeight - height) / 2
         readonly property real expandedY: 12
@@ -603,22 +603,12 @@ Container {
     LauncherView {
         anchors.fill: parent
         opacity: root.activeView === "launcher" ? 1.0 : 0.0
-        scale: root.activeView === "launcher" ? 1.0 : 0.96
-        transformOrigin: Item.Top
         visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation {
                 duration: Motion.durationNormal
                 easing.type: Motion.easingStandard
-            }
-        }
-
-        Behavior on scale {
-            SpringAnimation {
-                spring: Motion.springStiffness
-                damping: Motion.springDamping
-                epsilon: Motion.springScaleEpsilon
             }
         }
     }
