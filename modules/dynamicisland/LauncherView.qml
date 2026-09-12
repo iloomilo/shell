@@ -90,6 +90,16 @@ Item {
                             }
                         }
 
+                        Keys.onPressed: event => {
+                            if ((event.modifiers & Qt.ControlModifier) && (event.key === Qt.Key_J || event.key === Qt.Key_N)) {
+                                event.accepted = true;
+                                LauncherService.selectNext();
+                            } else if ((event.modifiers & Qt.ControlModifier) && (event.key === Qt.Key_K || event.key === Qt.Key_P)) {
+                                event.accepted = true;
+                                LauncherService.selectPrevious();
+                            }
+                        }
+
                         Keys.onDownPressed: event => {
                             event.accepted = true;
                             LauncherService.selectNext();
