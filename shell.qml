@@ -4,7 +4,7 @@ import QtQuick
 import qs.theme
 import qs.components
 import qs.modules.workspaces
-import qs.modules.clock
+import qs.modules.dynamicisland
 import qs.modules.status
 
 ShellRoot {
@@ -32,7 +32,7 @@ ShellRoot {
                 item: workspacesIsland
             }
             Region {
-                item: clockIsland
+                item: dynamicIsland
             }
             Region {
                 item: statusIsland
@@ -52,8 +52,8 @@ ShellRoot {
                 anchors.top: parent.top
             }
 
-            ClockIsland {
-                id: clockIsland
+            DynamicIsland {
+                id: dynamicIsland
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
             }
