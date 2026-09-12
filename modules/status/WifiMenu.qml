@@ -255,11 +255,17 @@ Item {
                             font.pixelSize: Typography.sizeBody
                             echoMode: root.showPassword ? TextInput.Normal : TextInput.Password
                             clip: true
-
+                            focus: true
+                            activeFocusOnTab: true
+                            selectByMouse: true
                             onAccepted: {
                                 if (pwdInput.text.length > 0 && !Network.connectingTo) {
                                     Network.connect(root.passwordPromptSsid, pwdInput.text);
                                 }
+                            }
+
+                            Keys.onEscapePressed: {
+                                root.passwordPromptSsid = "";
                             }
                         }
 
@@ -270,6 +276,7 @@ Item {
                             font.pixelSize: Typography.sizeBody
                             color: Colors.outline
                             visible: pwdInput.text.length === 0 && !pwdInput.activeFocus
+                            enabled: false
                         }
                     }
 

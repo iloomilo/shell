@@ -13,7 +13,7 @@ PanelWindow {
     exclusiveZone: 0
 
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: active ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
     anchors {
         top: true
@@ -24,8 +24,6 @@ PanelWindow {
 
     Item {
         anchors.fill: parent
-        focus: true
-        Keys.onEscapePressed: root.dismissed()
 
         TapHandler {
             onTapped: root.dismissed()

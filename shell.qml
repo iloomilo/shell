@@ -17,6 +17,7 @@ ShellRoot {
         id: root
 
         WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.keyboardFocus: statusIsland.isExpanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         implicitHeight: 400
         color: "transparent"
         exclusiveZone: Metrics.exclusiveZone
