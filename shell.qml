@@ -23,6 +23,9 @@ ShellRoot {
                 item: barHitArea
             }
             Region {
+                item: clockIsland
+            }
+            Region {
                 item: statusIsland
             }
         }
@@ -49,6 +52,7 @@ ShellRoot {
             }
 
             ClockIsland {
+                id: clockIsland
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
             }
