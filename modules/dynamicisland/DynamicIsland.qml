@@ -41,13 +41,14 @@ Container {
     }
 
     property bool viewReady: true
+    readonly property bool isCompactReady: activeView === "compact" && viewReady
 
     onActiveViewChanged: {
         viewReady = false;
         if (activeView === "launcher") {
             viewDelay.interval = 180;
         } else if (activeView === "compact") {
-            viewDelay.interval = Motion.collapseStagger;
+            viewDelay.interval = 250;
         } else {
             viewDelay.interval = Motion.contentStagger;
         }
@@ -120,14 +121,17 @@ Container {
     Item {
         id: compactPillView
         anchors.fill: parent
-        opacity: (root.activeView === "compact" && root.viewReady) ? 1.0 : 0.0
+        opacity: root.isCompactReady ? 1.0 : 0.0
         visible: opacity > 0
+
+        transform: Translate {
+            y: (root.activeView === "compact") ? timeText.entryY : 0
+        }
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Motion.contentFade
-                easing.type: Easing.Bezier
-                easing.bezierCurve: Motion.standard
+                duration: root.isCompactReady ? 180 : Motion.durationFast
+                easing.type: Easing.OutCubic
             }
         }
 
@@ -223,8 +227,38 @@ Container {
         x: compactX + (expandedX - compactX) * root.morphProgress
         y: compactY + (expandedY - compactY) * root.morphProgress
         color: root.activeView === "media" ? Colors.on_surface_variant : Colors.on_surface
-        opacity: (root.activeView === "compact" || root.activeView === "media") ? 1.0 : 0.0
+        opacity: (root.activeView === "media") ? 1.0 : (root.isCompactReady ? 1.0 : 0.0)
         visible: opacity > 0
+
+        property real entryY: 0
+
+        Connections {
+            target: root
+            function onActiveViewChanged() {
+                if (root.activeView === "compact") {
+                    timeText.entryY = 10;
+                } else {
+                    timeText.entryY = 0;
+                }
+            }
+            function onViewReadyChanged() {
+                if (root.isCompactReady) {
+                    timeText.entryY = 0;
+                }
+            }
+        }
+
+        Behavior on entryY {
+            enabled: root.isCompactReady
+            NumberAnimation {
+                duration: 220
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        transform: Translate {
+            y: (root.activeView === "compact") ? timeText.entryY : 0
+        }
 
         Behavior on color {
             ColorAnimation { duration: Motion.durationNormal }
@@ -232,8 +266,8 @@ Container {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: Motion.durationFast
-                easing.type: Motion.easingStandard
+                duration: root.isCompactReady ? 180 : Motion.durationFast
+                easing.type: Easing.OutCubic
             }
         }
     }
