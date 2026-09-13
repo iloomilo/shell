@@ -4,7 +4,7 @@ import Quickshell
 import QtQuick
 
 Singleton {
-    readonly property string family: "Adwaita Sans"
+    readonly property string family: "Google Sans Flex"
     readonly property string iconFamily: "Material Symbols Rounded"
 
     readonly property int sizeSmall: 10
