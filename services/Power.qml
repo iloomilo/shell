@@ -10,7 +10,7 @@ Singleton {
     property bool menuOpen: false
 
     readonly property var actions: [
-        { icon: "lock", label: "Lock", command: ["loginctl", "lock-session"] },
+        { icon: "lock", label: "Lock", command: ["qs", "ipc", "call", "lock", "lock"] },
         { icon: "logout", label: "Log out", command: ["niri", "msg", "action", "quit", "--skip-confirmation"] },
         { icon: "bedtime", label: "Suspend", command: ["systemctl", "suspend"] },
         { icon: "restart_alt", label: "Restart", command: ["systemctl", "reboot"] },

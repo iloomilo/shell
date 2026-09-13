@@ -8,8 +8,11 @@ import qs.services as Services
 import qs.modules.workspaces
 import qs.modules.dynamicisland
 import qs.modules.status
+import qs.modules.lock
 
 ShellRoot {
+    LockScreen {}
+
     IpcHandler {
         target: "launcher"
         function toggle() {
