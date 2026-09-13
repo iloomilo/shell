@@ -4,6 +4,7 @@ import Quickshell
 import QtQuick
 
 Singleton {
+    // TODO: check the Google Sans Flex setup: it only works when registered with fontconfig (~/.local/share/fonts/GoogleSansFlex.ttf -> assets/fonts/GoogleSansFlex.ttf, then fc-cache -f); consider managing the symlink with chezmoi
     readonly property string family: "Google Sans Flex"
     readonly property string iconFamily: "Material Symbols Rounded"
 
