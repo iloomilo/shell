@@ -245,9 +245,12 @@ Container {
                 }
             }
             function onViewReadyChanged() {
-                if (root.isCompactReady) {
-                    timeText.entryY = 0;
-                }
+                if (root.activeView !== "compact" || !root.viewReady)
+                    return;
+                Qt.callLater(() => {
+                    if (root.isCompactReady)
+                        timeText.entryY = 0;
+                });
             }
         }
 
