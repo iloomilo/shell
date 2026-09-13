@@ -11,18 +11,62 @@ Item {
     anchors.fill: parent
     anchors.margins: 14
 
+    NumberAnimation {
+        id: scrollAnim
+        target: appList
+        property: "contentY"
+        duration: 180
+        easing.type: Easing.OutCubic
+    }
+
+    function ensureVisible(index, immediate) {
+        if (appList.count === 0 || index < 0 || index >= appList.count) return;
+
+        let itemHeight = 48;
+        let spacing = appList.spacing;
+        let itemStride = itemHeight + spacing;
+        let itemTop = index * itemStride;
+        let itemBottom = itemTop + itemHeight;
+
+        let viewHeight = appList.height;
+        let currentY = appList.contentY;
+        let maxY = Math.max(0, (appList.contentHeight || 0) - viewHeight);
+
+        let targetY = currentY;
+
+        if (index === 0) {
+            targetY = 0;
+        } else if (index === appList.count - 1 && currentY > itemTop - viewHeight) {
+            targetY = maxY;
+        } else if (itemTop < currentY) {
+            targetY = Math.max(0, itemTop - spacing);
+        } else if (itemBottom > currentY + viewHeight) {
+            targetY = Math.min(maxY, itemBottom - viewHeight + spacing);
+        }
+
+        if (immediate) {
+            scrollAnim.stop();
+            appList.contentY = targetY;
+        } else if (Math.abs(targetY - currentY) > 1) {
+            scrollAnim.stop();
+            scrollAnim.from = currentY;
+            scrollAnim.to = targetY;
+            scrollAnim.start();
+        }
+    }
+
     Connections {
         target: LauncherService
         function onSelectedIndexChanged() {
-            if (appList.count > 0 && LauncherService.selectedIndex >= 0 && LauncherService.selectedIndex < appList.count) {
-                appList.positionViewAtIndex(LauncherService.selectedIndex, ListView.Contain);
-            }
+            ensureVisible(LauncherService.selectedIndex, false);
         }
     }
 
     onVisibleChanged: {
         if (visible) {
             activeIndicator.animateMotion = false;
+            scrollAnim.stop();
+            appList.contentY = 0;
             LauncherService.reset();
             focusTimer.restart();
             reEnableTimer.restart();
@@ -50,11 +94,11 @@ Item {
         anchors.fill: parent
         spacing: 10
 
-        // 1. Search Box
+        // Search box
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 46
-            radius: Metrics.radiusCard
+            radius: Metrics.radiusContainer
             color: Colors.surface_container_high
             border.width: searchInput.activeFocus ? 1.5 : 1
             border.color: searchInput.activeFocus ? Colors.primary : Colors.outline_variant
@@ -84,7 +128,7 @@ Item {
                         id: searchInput
                         anchors.fill: parent
                         verticalAlignment: TextInput.AlignVCenter
-                        font.family: Typography.fontFamily
+                        font.family: Typography.family
                         font.pixelSize: Typography.sizeBody
                         font.weight: Typography.weightMedium
                         color: Colors.on_surface
@@ -95,6 +139,8 @@ Item {
                         text: LauncherService.query
                         onTextChanged: {
                             activeIndicator.animateMotion = false;
+                            scrollAnim.stop();
+                            appList.contentY = 0;
                             if (LauncherService.query !== text) {
                                 LauncherService.query = text;
                             }
@@ -179,12 +225,12 @@ Item {
             }
         }
 
-        // 2. Apps List View
+        // Apps list
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            // Animated Empty State Micro-interaction
+            // Empty state
             ColumnLayout {
                 id: emptyStateBox
                 anchors.centerIn: parent
@@ -200,7 +246,6 @@ Item {
                     SpringAnimation { spring: 3.5; damping: 0.55; epsilon: 0.01 }
                 }
 
-                // Animated Badge with subtle float
                 Rectangle {
                     width: 56
                     height: 56
@@ -246,7 +291,6 @@ Item {
                     }
                 }
 
-                // Suggestion chip
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: 4
@@ -273,6 +317,7 @@ Item {
                 model: LauncherService.results
                 boundsBehavior: Flickable.StopAtBounds
                 currentIndex: LauncherService.selectedIndex
+                onMovementStarted: scrollAnim.stop()
 
                 Rectangle {
                     id: activeIndicator
@@ -280,8 +325,10 @@ Item {
                     x: 0
                     width: appList.width
                     height: 48
-                    radius: 8
-                    color: Colors.surface_container_highest
+                    radius: 10
+                    color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.10)
+                    border.width: 1
+                    border.color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.22)
                     visible: appList.count > 0 && LauncherService.results.length > 0
                     z: 0
 
@@ -291,9 +338,30 @@ Item {
 
                     Behavior on y {
                         enabled: activeIndicator.animateMotion && root.visible
-                        NumberAnimation {
-                            duration: 160
-                            easing.type: Easing.OutCubic
+                        SpringAnimation {
+                            spring: 4.8
+                            damping: 0.44
+                            epsilon: 0.1
+                        }
+                    }
+
+                    // Action key badge
+                    Rectangle {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 28
+                        height: 24
+                        radius: 6
+                        color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.16)
+                        border.width: 1
+                        border.color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.32)
+
+                        Icon {
+                            anchors.centerIn: parent
+                            text: "keyboard_return"
+                            font.pixelSize: 15
+                            color: Colors.primary
                         }
                     }
                 }
@@ -309,41 +377,9 @@ Item {
                     height: 48
                     z: 1
 
-                    opacity: 0.0
-                    transform: Translate {
-                        id: itemTrans
-                        y: 8
-                    }
-
-                    Timer {
-                        id: staggerTimer
-                        interval: Math.min(index * 22, 160)
-                        running: true
-                        repeat: false
-                        onTriggered: enterAnim.start()
-                    }
-
-                    ParallelAnimation {
-                        id: enterAnim
-                        NumberAnimation {
-                            target: delegateRoot
-                            property: "opacity"
-                            to: 1.0
-                            duration: 180
-                            easing.type: Easing.OutCubic
-                        }
-                        NumberAnimation {
-                            target: itemTrans
-                            property: "y"
-                            to: 0
-                            duration: 200
-                            easing.type: Easing.OutCubic
-                        }
-                    }
-
                     Rectangle {
                         anchors.fill: parent
-                        radius: 8
+                        radius: 10
                         color: (itemHover.hovered && !delegateRoot.isSelected) 
                             ? Qt.rgba(Colors.surface_container_high.r, Colors.surface_container_high.g, Colors.surface_container_high.b, 0.4) 
                             : "transparent"
@@ -356,25 +392,41 @@ Item {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 10
+                        anchors.leftMargin: 12
                         anchors.rightMargin: 12
                         spacing: 12
                         z: 1
 
-                        // App Icon
+                        // App icon
                         Item {
                             width: 32
                             height: 32
                             Layout.alignment: Qt.AlignVCenter
+                            scale: delegateRoot.isSelected ? 1.10 : 1.0
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 180
+                                    easing.type: Easing.OutBack
+                                    easing.overshoot: 1.4
+                                }
+                            }
 
                             Image {
                                 id: appIconImg
                                 anchors.fill: parent
-                                source: Quickshell.iconPath(modelData.icon)
+                                source: {
+                                    let icon = modelData.icon || "";
+                                    if (icon === "") return "";
+                                    if (icon.startsWith("/") || icon.startsWith("file://")) {
+                                        return icon.startsWith("file://") ? icon : ("file://" + icon);
+                                    }
+                                    return Quickshell.iconPath(icon, true);
+                                }
                                 sourceSize: Qt.size(32, 32)
                                 fillMode: Image.PreserveAspectFit
                                 asynchronous: true
-                                visible: status === Image.Ready
+                                visible: source != "" && status === Image.Ready
                             }
 
                             Icon {
@@ -382,11 +434,11 @@ Item {
                                 text: "apps"
                                 font.pixelSize: 24
                                 color: delegateRoot.isSelected ? Colors.primary : Colors.on_surface_variant
-                                visible: appIconImg.status !== Image.Ready
+                                visible: !appIconImg.visible
                             }
                         }
 
-                        // App Titles
+                        // App titles
                         ColumnLayout {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignVCenter
@@ -411,12 +463,10 @@ Item {
                             }
                         }
 
-                        // Selected action indicator
-                        Icon {
-                            visible: delegateRoot.isSelected
-                            text: "keyboard_return"
-                            font.pixelSize: 18
-                            color: Colors.primary
+                        // Spacer for action key badge
+                        Item {
+                            implicitWidth: 18
+                            implicitHeight: 18
                             Layout.alignment: Qt.AlignVCenter
                         }
                     }

@@ -46,7 +46,7 @@ Container {
     onActiveViewChanged: {
         viewReady = false;
         if (activeView === "launcher") {
-            viewDelay.interval = 180;
+            viewDelay.interval = 100;
         } else if (activeView === "compact") {
             viewDelay.interval = 250;
         } else {
@@ -95,26 +95,29 @@ Container {
     clip: true
 
     Behavior on width {
-        SpringAnimation {
-            spring: root.isMorphExpanding ? 5.2 : 3.6
-            damping: root.isMorphExpanding ? 0.50 : 0.46
-            epsilon: Motion.springEpsilon
+        NumberAnimation {
+            duration: (DynamicIsland.mode === "launcher" || root.activeView === "launcher") 
+                ? (root.isMorphExpanding ? 250 : 200) 
+                : (root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit)
+            easing.type: Easing.OutCubic
         }
     }
 
     Behavior on height {
-        SpringAnimation {
-            spring: root.isMorphExpanding ? 3.3 : 4.8
-            damping: root.isMorphExpanding ? 0.44 : 0.50
-            epsilon: Motion.springEpsilon
+        NumberAnimation {
+            duration: (DynamicIsland.mode === "launcher" || root.activeView === "launcher") 
+                ? (root.isMorphExpanding ? 250 : 200) 
+                : (root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit)
+            easing.type: Easing.OutCubic
         }
     }
 
     Behavior on radius {
-        SpringAnimation {
-            spring: 4.5
-            damping: 0.50
-            epsilon: Motion.springEpsilon
+        NumberAnimation {
+            duration: (DynamicIsland.mode === "launcher" || root.activeView === "launcher") 
+                ? (root.isMorphExpanding ? 250 : 200) 
+                : (root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit)
+            easing.type: Easing.OutCubic
         }
     }
 
@@ -219,7 +222,7 @@ Container {
         font.weight: Typography.weightBold
         z: 10
 
-        readonly property real compactX: (root.width - width) / 2
+        readonly property real compactX: DynamicIsland.hasMedia ? 37 : 14
         readonly property real expandedX: root.width - width - 12
         readonly property real compactY: (Metrics.islandHeight - height) / 2
         readonly property real expandedY: 12
@@ -636,13 +639,22 @@ Container {
 
     LauncherView {
         anchors.fill: parent
-        opacity: root.activeView === "launcher" ? 1.0 : 0.0
+        opacity: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.0
+        scale: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.96
+        transformOrigin: Item.Center
         visible: opacity > 0
 
         Behavior on opacity {
             NumberAnimation {
                 duration: Motion.durationNormal
-                easing.type: Motion.easingStandard
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: Motion.durationNormal
+                easing.type: Easing.OutCubic
             }
         }
     }
