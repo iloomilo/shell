@@ -11,10 +11,10 @@ Singleton {
 
     readonly property var actions: [
         { icon: "lock", label: "Lock", command: ["qs", "ipc", "call", "lock", "lock"] },
-        { icon: "logout", label: "Log out", command: ["niri", "msg", "action", "quit", "--skip-confirmation"] },
+        { icon: "logout", label: "Log out", confirm: true, command: ["niri", "msg", "action", "quit", "--skip-confirmation"] },
         { icon: "bedtime", label: "Suspend", command: ["systemctl", "suspend"] },
-        { icon: "restart_alt", label: "Restart", command: ["systemctl", "reboot"] },
-        { icon: "power_settings_new", label: "Shut down", command: ["systemctl", "poweroff"] }
+        { icon: "restart_alt", label: "Restart", confirm: true, command: ["systemctl", "reboot"] },
+        { icon: "power_settings_new", label: "Shut down", confirm: true, command: ["systemctl", "poweroff"] }
     ]
 
     function open() {
@@ -35,6 +35,35 @@ Singleton {
         menuOpen = false;
         proc.command = command;
         proc.running = true;
+    }
+
+    property string uptimeText: ""
+
+    Timer {
+        interval: 60000
+        running: root.menuOpen
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: uptimeProc.running = true
+    }
+
+    Process {
+        id: uptimeProc
+        command: ["cat", "/proc/uptime"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const total = Math.floor(parseFloat(text.split(" ")[0]) || 0);
+                const days = Math.floor(total / 86400);
+                const hours = Math.floor((total % 86400) / 3600);
+                const minutes = Math.floor((total % 3600) / 60);
+                if (days > 0)
+                    root.uptimeText = days + " d " + hours + " h";
+                else if (hours > 0)
+                    root.uptimeText = hours + " h " + minutes + " min";
+                else
+                    root.uptimeText = minutes + " min";
+            }
+        }
     }
 
     IpcHandler {
