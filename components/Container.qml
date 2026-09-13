@@ -5,5 +5,5 @@ Rectangle {
     id: root
 
     radius: Metrics.radiusPill
-    color: Qt.rgba(Colors.surface_container_lowest.r, Colors.surface_container_lowest.g, Colors.surface_container_lowest.b, Metrics.glassOpacity)
+    color: Qt.rgba(Colors.surface_container.r, Colors.surface_container.g, Colors.surface_container.b, Metrics.glassOpacity)
 }

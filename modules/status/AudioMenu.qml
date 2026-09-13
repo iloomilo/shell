@@ -18,7 +18,7 @@ Item {
             Layout.fillWidth: true
             implicitHeight: 84
             radius: Metrics.radiusCard
-            color: Colors.surface_container
+            color: Colors.surface_container_high
 
             ColumnLayout {
                 anchors.fill: parent
@@ -82,10 +82,10 @@ Item {
             Layout.rightMargin: 2
 
             StyledText {
-                text: "OUTPUT DEVICES"
-                font.pixelSize: Typography.sizeSmall
-                font.weight: Typography.weightBold
-                color: Colors.on_surface_variant
+                text: "Output devices"
+                font.pixelSize: Typography.sizeCaption
+                font.weight: Typography.weightMedium
+                color: Colors.primary
                 Layout.fillWidth: true
             }
 

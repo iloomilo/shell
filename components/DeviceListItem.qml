@@ -113,7 +113,7 @@ Rectangle {
                 ? Colors.primary
                 : (root.danger
                     ? (itemHover.hovered ? Colors.error : Colors.error_container)
-                    : (itemHover.hovered ? Colors.surface_container_highest : Colors.surface_container))
+                    : (itemHover.hovered ? Colors.surface_container_highest : Colors.surface_container_high))
             Layout.alignment: Qt.AlignVCenter
 
             Behavior on color {

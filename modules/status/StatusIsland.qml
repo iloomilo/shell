@@ -115,7 +115,7 @@ Rectangle {
     width: isExpanded ? expandedWidth : collapsedWidth
     height: isExpanded ? expandedHeight : Metrics.islandHeight
     radius: isExpanded ? Metrics.radiusContainer : Metrics.radiusPill
-    color: Qt.rgba(Colors.surface_container_lowest.r, Colors.surface_container_lowest.g, Colors.surface_container_lowest.b, Metrics.islandOpacity)
+    color: Qt.rgba(Colors.surface_container.r, Colors.surface_container.g, Colors.surface_container.b, Metrics.islandOpacity)
     clip: true
 
     Behavior on width {
@@ -438,7 +438,7 @@ Rectangle {
             anchors.rightMargin: 8
             anchors.verticalCenter: headerBar.verticalCenter
             text: root.showsPower ? "Power" : (root.showsAudio ? "Audio" : (root.showsWifi ? "Wi-Fi" : "Bluetooth"))
-            font.pixelSize: Typography.sizeTitle
+            font.pixelSize: Typography.sizeHeader + 2
             font.weight: Typography.weightBold
             elide: Text.ElideRight
             opacity: root.expandedVisible ? 1.0 : 0.0

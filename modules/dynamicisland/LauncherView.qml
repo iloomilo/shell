@@ -98,14 +98,8 @@ Item {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 46
-            radius: Metrics.radiusContainer
+            radius: height / 2
             color: Colors.surface_container_high
-            border.width: searchInput.activeFocus ? 1.5 : 1
-            border.color: searchInput.activeFocus ? Colors.primary : Colors.outline_variant
-
-            Behavior on border.color {
-                ColorAnimation { duration: Motion.durationFast }
-            }
 
             RowLayout {
                 anchors.fill: parent
@@ -206,7 +200,7 @@ Item {
                 Rectangle {
                     implicitWidth: 32
                     implicitHeight: 20
-                    radius: 5
+                    radius: 10
                     color: Colors.surface_container_highest
                     Layout.alignment: Qt.AlignVCenter
 
@@ -325,10 +319,8 @@ Item {
                     x: 0
                     width: appList.width
                     height: 48
-                    radius: 10
-                    color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.10)
-                    border.width: 1
-                    border.color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.22)
+                    radius: 16
+                    color: Colors.secondary_container
                     visible: appList.count > 0 && LauncherService.results.length > 0
                     z: 0
 
@@ -352,16 +344,14 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width: 28
                         height: 24
-                        radius: 6
-                        color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.16)
-                        border.width: 1
-                        border.color: Qt.rgba(Colors.primary.r, Colors.primary.g, Colors.primary.b, 0.32)
+                        radius: 10
+                        color: Qt.rgba(Colors.on_secondary_container.r, Colors.on_secondary_container.g, Colors.on_secondary_container.b, 0.12)
 
                         Icon {
                             anchors.centerIn: parent
                             text: "keyboard_return"
                             font.pixelSize: 15
-                            color: Colors.primary
+                            color: Colors.on_secondary_container
                         }
                     }
                 }
@@ -379,7 +369,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 10
+                        radius: 16
                         color: (itemHover.hovered && !delegateRoot.isSelected) 
                             ? Qt.rgba(Colors.surface_container_high.r, Colors.surface_container_high.g, Colors.surface_container_high.b, 0.4) 
                             : "transparent"

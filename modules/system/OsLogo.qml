@@ -124,7 +124,7 @@ Item {
             implicitWidth: cardContent.implicitWidth + 24
             implicitHeight: cardContent.implicitHeight + 16
             radius: Metrics.radiusContainer
-            color: Colors.surface_container_lowest
+            color: Colors.surface_container
 
             transformOrigin: Item.Top
             opacity: root.tooltipOpen ? 1.0 : 0.0

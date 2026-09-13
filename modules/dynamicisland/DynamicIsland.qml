@@ -451,8 +451,16 @@ Container {
                     id: playButton
                     width: 32
                     height: 32
-                    radius: Metrics.radiusPill
+                    radius: DynamicIsland.isMusicPlaying ? 10 : width / 2
                     color: playMouse.containsMouse ? Qt.lighter(Colors.primary, 1.15) : Colors.primary
+
+                    Behavior on radius {
+                        NumberAnimation {
+                            duration: Motion.durationMedium1
+                            easing.type: Easing.Bezier
+                            easing.bezierCurve: Motion.emphasized
+                        }
+                    }
                     scale: playMouse.pressed ? 0.92 : (playMouse.containsMouse ? 1.08 : 1.0)
                     Layout.alignment: Qt.AlignVCenter
 
