@@ -26,14 +26,30 @@ ShellRoot {
         }
     }
 
+    IpcHandler {
+        target: "wallpaper"
+        function toggle() {
+            Services.DynamicIsland.toggleWallpaper();
+        }
+        function refresh() {
+            Services.WallpaperService.refresh();
+        }
+        function open() {
+            Services.DynamicIsland.openWallpaper();
+        }
+        function close() {
+            Services.DynamicIsland.closeWallpaper();
+        }
+    }
+
     PanelWindow {
         id: root
 
         WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: Services.DynamicIsland.isLauncher 
+        WlrLayershell.keyboardFocus: Services.DynamicIsland.isPicker 
             ? WlrKeyboardFocus.Exclusive 
             : (statusIsland.requiresKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
-        implicitHeight: 500
+        implicitHeight: 560
         color: "transparent"
         exclusiveZone: Metrics.exclusiveZone
 
@@ -78,8 +94,8 @@ ShellRoot {
                 id: dynamicHitArea
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
-                width: (Services.DynamicIsland.isLauncher || dynamicCollapseTimer.running) ? 480 : dynamicIsland.width
-                height: (Services.DynamicIsland.isLauncher || dynamicCollapseTimer.running) ? 420 : dynamicIsland.height
+                width: (Services.DynamicIsland.isPicker || dynamicCollapseTimer.running) ? Math.max(480, dynamicIsland.width) : dynamicIsland.width
+                height: (Services.DynamicIsland.isPicker || dynamicCollapseTimer.running) ? Math.max(420, dynamicIsland.height) : dynamicIsland.height
             }
 
             Timer {
@@ -90,8 +106,8 @@ ShellRoot {
 
             Connections {
                 target: Services.DynamicIsland
-                function onIsLauncherChanged() {
-                    if (!Services.DynamicIsland.isLauncher) {
+                function onIsPickerChanged() {
+                    if (!Services.DynamicIsland.isPicker) {
                         dynamicCollapseTimer.restart();
                     }
                 }

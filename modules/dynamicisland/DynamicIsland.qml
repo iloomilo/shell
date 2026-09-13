@@ -25,12 +25,14 @@ Container {
         return m + ":" + (s < 10 ? "0" : "") + s;
     }
 
-    readonly property bool isMediaExpanded: DynamicIsland.hasMedia && root.isHovered && DynamicIsland.mode !== "notification" && DynamicIsland.mode !== "osd" && DynamicIsland.mode !== "launcher"
-    readonly property bool isMorphExpanding: DynamicIsland.isLauncher || isMediaExpanded || DynamicIsland.mode === "notification" || DynamicIsland.mode === "osd"
+    readonly property bool isMediaExpanded: DynamicIsland.hasMedia && root.isHovered && DynamicIsland.mode !== "notification" && DynamicIsland.mode !== "osd" && !DynamicIsland.isPicker
+    readonly property bool isMorphExpanding: DynamicIsland.isPicker || isMediaExpanded || DynamicIsland.mode === "notification" || DynamicIsland.mode === "osd"
 
     readonly property string activeView: {
         if (DynamicIsland.mode === "launcher")
             return "launcher";
+        if (DynamicIsland.mode === "wallpaper")
+            return "wallpaper";
         if (DynamicIsland.mode === "notification")
             return "notification";
         if (DynamicIsland.mode === "osd")
@@ -45,7 +47,7 @@ Container {
 
     onActiveViewChanged: {
         viewReady = false;
-        if (activeView === "launcher") {
+        if (activeView === "launcher" || activeView === "wallpaper") {
             viewDelay.interval = 100;
         } else if (activeView === "compact") {
             viewDelay.interval = 250;
@@ -68,6 +70,8 @@ Container {
     }
 
     height: {
+        if (DynamicIsland.mode === "wallpaper")
+            return 520;
         if (DynamicIsland.mode === "launcher")
             return 420;
         if (DynamicIsland.mode === "notification")
@@ -78,6 +82,8 @@ Container {
     }
 
     width: {
+        if (DynamicIsland.mode === "wallpaper")
+            return 720;
         if (DynamicIsland.mode === "launcher")
             return 480;
         if (DynamicIsland.mode === "notification")
@@ -91,12 +97,12 @@ Container {
         return timeText.implicitWidth + 28;
     }
 
-    radius: (DynamicIsland.mode === "launcher" || isMediaExpanded || DynamicIsland.mode === "notification") ? Metrics.radiusContainer : Metrics.radiusPill
+    radius: (DynamicIsland.isPicker || isMediaExpanded || DynamicIsland.mode === "notification") ? Metrics.radiusContainer : Metrics.radiusPill
     clip: true
 
     Behavior on width {
         NumberAnimation {
-            duration: (DynamicIsland.mode === "launcher" || root.activeView === "launcher") 
+            duration: (DynamicIsland.isPicker || root.activeView === "launcher" || root.activeView === "wallpaper") 
                 ? (root.isMorphExpanding ? 250 : 200) 
                 : (root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit)
             easing.type: Easing.OutCubic
@@ -105,7 +111,7 @@ Container {
 
     Behavior on height {
         NumberAnimation {
-            duration: (DynamicIsland.mode === "launcher" || root.activeView === "launcher") 
+            duration: (DynamicIsland.isPicker || root.activeView === "launcher" || root.activeView === "wallpaper") 
                 ? (root.isMorphExpanding ? 250 : 200) 
                 : (root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit)
             easing.type: Easing.OutCubic
@@ -114,7 +120,7 @@ Container {
 
     Behavior on radius {
         NumberAnimation {
-            duration: (DynamicIsland.mode === "launcher" || root.activeView === "launcher") 
+            duration: (DynamicIsland.isPicker || root.activeView === "launcher" || root.activeView === "wallpaper") 
                 ? (root.isMorphExpanding ? 250 : 200) 
                 : (root.isMorphExpanding ? Motion.morphEnter : Motion.morphExit)
             easing.type: Easing.OutCubic
@@ -652,6 +658,28 @@ Container {
         anchors.fill: parent
         opacity: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.0
         scale: (root.activeView === "launcher" && root.viewReady) ? 1.0 : 0.96
+        transformOrigin: Item.Center
+        visible: opacity > 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Motion.durationNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: Motion.durationNormal
+                easing.type: Easing.OutCubic
+            }
+        }
+    }
+
+    WallpaperView {
+        anchors.fill: parent
+        opacity: (root.activeView === "wallpaper" && root.viewReady) ? 1.0 : 0.0
+        scale: (root.activeView === "wallpaper" && root.viewReady) ? 1.0 : 0.96
         transformOrigin: Item.Center
         visible: opacity > 0
 

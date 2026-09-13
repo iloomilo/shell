@@ -308,6 +308,13 @@ Singleton {
     }
 
     readonly property bool isLauncher: mode === "launcher"
+    readonly property bool isWallpaper: mode === "wallpaper"
+    readonly property bool isPicker: isLauncher || isWallpaper
+
+    onIsWallpaperChanged: {
+        if (!isWallpaper)
+            WallpaperService.cancel();
+    }
 
     function openLauncher() {
         mode = "launcher";
@@ -318,6 +325,27 @@ Singleton {
         if (mode === "launcher") {
             mode = hasMedia ? "media" : "clock";
             priority = hasMedia ? 5 : 0;
+        }
+    }
+
+    function openWallpaper() {
+        mode = "wallpaper";
+        priority = 100;
+        WallpaperService.refresh();
+    }
+
+    function closeWallpaper() {
+        if (mode === "wallpaper") {
+            mode = hasMedia ? "media" : "clock";
+            priority = hasMedia ? 5 : 0;
+        }
+    }
+
+    function toggleWallpaper() {
+        if (isWallpaper) {
+            closeWallpaper();
+        } else {
+            openWallpaper();
         }
     }
 

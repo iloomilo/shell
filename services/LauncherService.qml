@@ -10,6 +10,10 @@ Singleton {
     property int selectedIndex: 0
     property var allApps: []
 
+    readonly property var commands: [
+        { id: "command:wallpaper", command: "wallpaper", name: "Wallpaper", genericName: "Browse and set wallpapers", comment: "", icon: "", symbol: "wallpaper", categories: [], keywords: [], execString: "" }
+    ]
+
     function updateApps() {
         let raw = DesktopEntries.applications.values;
         if (!raw || raw.length === 0)
@@ -63,6 +67,10 @@ Singleton {
 
     readonly property var results: {
         let q = query.trim().toLowerCase();
+        if (q.startsWith("$")) {
+            let term = q.slice(1);
+            return root.commands.filter(c => c.command.startsWith(term) || c.name.toLowerCase().startsWith(term));
+        }
         if (q.length === 0)
             return root.allApps;
 
@@ -134,7 +142,18 @@ Singleton {
         }
     }
 
+    function runCommand(command) {
+        root.query = "";
+        root.selectedIndex = 0;
+        if (command === "wallpaper")
+            DynamicIsland.openWallpaper();
+    }
+
     function launch(app) {
+        if (app && app.command) {
+            root.runCommand(app.command);
+            return;
+        }
         if (app && app.entry) {
             app.entry.execute();
             DynamicIsland.closeLauncher();

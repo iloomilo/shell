@@ -421,7 +421,7 @@ Item {
 
                             Icon {
                                 anchors.centerIn: parent
-                                text: "apps"
+                                text: modelData.symbol || "apps"
                                 font.pixelSize: 24
                                 color: delegateRoot.isSelected ? Colors.primary : Colors.on_surface_variant
                                 visible: !appIconImg.visible
