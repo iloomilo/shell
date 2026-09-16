@@ -131,6 +131,16 @@ Singleton {
         root.triggerVolumeOsd();
     }
 
+    readonly property real brightness: Brightness.value
+
+    onBrightnessChanged: {
+        if (!Brightness.ready)
+            return;
+        if (root.mode === "notification" && root.priority >= 30)
+            return;
+        root.showOsd(Brightness.iconName, "Brightness", root.brightness, Math.round(root.brightness * 100) + "%");
+    }
+
     NotificationServer {
         id: notifServer
         bodySupported: true
