@@ -21,6 +21,7 @@ Singleton {
     property var currentNotif: null
 
     property string osdIcon: ""
+    property string osdKind: ""
     property string osdTitle: ""
     property real osdValue: 0.0
     property string osdText: ""
@@ -138,7 +139,7 @@ Singleton {
             return;
         if (root.mode === "notification" && root.priority >= 30)
             return;
-        root.showOsd(Brightness.iconName, "Brightness", root.brightness, Math.round(root.brightness * 100) + "%");
+        root.showOsd(Brightness.iconName, "Brightness", root.brightness, Math.round(root.brightness * 100) + "%", "brightness");
     }
 
     NotificationServer {
@@ -178,14 +179,15 @@ Singleton {
         }
 
         let valText = root.muted ? "Muted" : (Math.round(root.volume * 100) + "%");
-        root.showOsd(icon, "Volume", root.muted ? 0.0 : root.volume, valText);
+        root.showOsd(icon, "Volume", root.muted ? 0.0 : root.volume, valText, "volume");
     }
 
-    function showOsd(icon, title, value, valText) {
+    function showOsd(icon, title, value, valText, kind = "") {
         if (root.mode === "notification" && root.priority >= 30)
             return;
 
         root.osdIcon = icon;
+        root.osdKind = kind;
         root.osdTitle = title;
         root.osdValue = value;
         root.osdText = valText;

@@ -534,7 +534,19 @@ Container {
             anchors.rightMargin: 12
             spacing: 8
 
+            OsdIcon {
+                visible: DynamicIsland.osdKind !== ""
+                kind: DynamicIsland.osdKind || "volume"
+                value: DynamicIsland.osdValue
+                muted: DynamicIsland.osdKind === "volume" && DynamicIsland.muted
+                color: Colors.primary
+                size: 18
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            // Fallback for OSDs without a vector icon
             Icon {
+                visible: DynamicIsland.osdKind === ""
                 text: DynamicIsland.osdIcon
                 color: Colors.primary
                 font.pixelSize: 18
