@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.WindowManager
 import qs.theme
+import qs.components
 
 Row {
     id: root
@@ -11,6 +12,116 @@ Row {
     readonly property real idleWidth: 12
 
     height: 20
+
+    // Scratchpad workspace: star icon and a divider before the regular workspaces
+    Item {
+        id: scratch
+
+        readonly property var ws: WindowManager.windowsets.find(w => w.name === "scratch")
+        readonly property bool isActive: Boolean(ws && ws.active)
+        readonly property bool isUrgent: Boolean(ws && ws.urgent && !ws.active)
+
+        // Pills after the first slot already bring their own leading gap
+        readonly property bool firstSlotShown: WindowManager.windowsets.some(w => w.name === "1" && w.shouldDisplay)
+
+        visible: Boolean(ws)
+        width: visible ? scratchRow.implicitWidth + (firstSlotShown ? root.gap : 0) : 0
+        height: root.height
+
+        Row {
+            id: scratchRow
+
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 6
+
+            Item {
+                id: star
+
+                readonly property color tint: {
+                    if (scratch.isUrgent)
+                        return Colors.error;
+                    if (scratch.isActive)
+                        return Colors.primary;
+                    return scratchHover.hovered ? Colors.secondary : Colors.on_surface_variant;
+                }
+
+                anchors.verticalCenter: parent.verticalCenter
+                implicitWidth: outlineStar.implicitWidth
+                implicitHeight: outlineStar.implicitHeight
+                scale: scratchHover.hovered && !scratch.isActive ? 1.15 : 1.0
+
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: Motion.durationFast
+                        easing.type: Motion.easingTactile
+                    }
+                }
+
+                // Changing FILL at runtime doesn't re-render, so crossfade an outline and a filled star
+                Icon {
+                    id: outlineStar
+                    anchors.centerIn: parent
+                    text: "star"
+                    font.pixelSize: 16
+                    font.variableAxes: ({ "FILL": 0 })
+                    color: star.tint
+                    opacity: scratch.isActive ? 0.0 : 1.0
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Motion.durationNormal
+                        }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Motion.durationNormal
+                        }
+                    }
+                }
+
+                Icon {
+                    anchors.centerIn: parent
+                    text: "star"
+                    font.pixelSize: 16
+                    font.variableAxes: ({ "FILL": 1 })
+                    color: star.tint
+                    opacity: scratch.isActive ? 1.0 : 0.0
+
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: Motion.durationNormal
+                        }
+                    }
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: Motion.durationNormal
+                        }
+                    }
+                }
+
+                HoverHandler {
+                    id: scratchHover
+                    cursorShape: Qt.PointingHandCursor
+                }
+
+                TapHandler {
+                    enabled: Boolean(scratch.ws) && scratch.ws.canActivate
+                    onTapped: scratch.ws.activate()
+                }
+            }
+
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 1
+                height: root.pillHeight
+                radius: 0.5
+                color: Colors.outline_variant
+            }
+        }
+    }
 
     Repeater {
         model: 10
