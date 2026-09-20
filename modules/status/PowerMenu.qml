@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import qs.services
 import qs.theme
 import qs.components
@@ -83,13 +84,38 @@ Item {
             }
         }
 
+        Item {
+            id: fillContent
+            anchors.fill: parent
+            visible: false
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: tile.pending ? (parent.width * root.pendingProgress) : 0
+                color: tile.danger ? Colors.error : Colors.primary
+            }
+        }
+
         Rectangle {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: tile.pending ? Math.max(tile.radius * 2, parent.width * root.pendingProgress) : 0
+            id: fillMask
+            anchors.fill: parent
             radius: tile.radius
-            color: tile.danger ? Colors.error : Colors.primary
+            visible: false
+            layer.enabled: true
+            layer.smooth: true
+            layer.samples: 4
+            antialiasing: true
+        }
+
+        MultiEffect {
+            anchors.fill: parent
+            source: fillContent
+            maskEnabled: true
+            maskSource: fillMask
+            maskThresholdMin: 0.5
+            maskSpreadAtMin: 1.0
             opacity: 0.35
             visible: tile.pending
         }
