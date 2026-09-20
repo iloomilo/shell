@@ -224,6 +224,9 @@ Item {
                         sourceSize.height: 96
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
+                        mipmap: true
+                        smooth: true
+                        antialiasing: true
                         visible: false
                     }
 
@@ -233,6 +236,9 @@ Item {
                         radius: width / 2
                         visible: false
                         layer.enabled: true
+                        layer.smooth: true
+                        layer.samples: 4
+                        antialiasing: true
                     }
 
                     MultiEffect {
@@ -240,6 +246,8 @@ Item {
                         source: avatarImage
                         maskEnabled: true
                         maskSource: avatarMask
+                        maskThresholdMin: 0.5
+                        maskSpreadAtMin: 1.0
                         visible: avatarImage.status === Image.Ready
                     }
                 }

@@ -19,9 +19,14 @@ Container {
 
     function formatTime(seconds) {
         if (!seconds || isNaN(seconds) || seconds < 0)
-            return "0:00";
-        let m = Math.floor(seconds / 60);
+            return (DynamicIsland.length >= 3600) ? "0:00:00" : "0:00";
         let s = Math.floor(seconds % 60);
+        let m = Math.floor(seconds / 60);
+        let h = Math.floor(m / 60);
+        m = m % 60;
+        if (h > 0 || DynamicIsland.length >= 3600) {
+            return h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+        }
         return m + ":" + (s < 10 ? "0" : "") + s;
     }
 
@@ -179,17 +184,21 @@ Container {
                 visible: DynamicIsland.hasMedia
                 opacity: DynamicIsland.isMusicPlaying ? 1.0 : 0.65
                 Layout.alignment: Qt.AlignVCenter
+                antialiasing: true
 
                 Item {
                     id: miniMask
                     anchors.fill: parent
                     layer.enabled: true
+                    layer.smooth: true
+                    layer.samples: 4
                     visible: false
 
                     Rectangle {
                         anchors.fill: parent
                         radius: 5
                         color: "black"
+                        antialiasing: true
                     }
                 }
 
@@ -199,6 +208,9 @@ Container {
                     source: DynamicIsland.trackArt
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
+                    mipmap: true
+                    smooth: true
+                    antialiasing: true
                     visible: false
                 }
 
@@ -207,6 +219,8 @@ Container {
                     source: miniCover
                     maskEnabled: true
                     maskSource: miniMask
+                    maskThresholdMin: 0.5
+                    maskSpreadAtMin: 1.0
                     visible: miniCover.status === Image.Ready
                 }
 
@@ -226,6 +240,7 @@ Container {
         text: Time.time
         font.pixelSize: Typography.sizeTitle
         font.weight: Typography.weightBold
+        font.features: { "tnum": 1 }
         z: 10
 
         readonly property real compactX: DynamicIsland.hasMedia ? 37 : 14
@@ -325,17 +340,21 @@ Container {
                     radius: Metrics.radiusCard
                     color: Colors.surface_container_highest
                     Layout.alignment: Qt.AlignVCenter
+                    antialiasing: true
 
                     Item {
                         id: fullMask
                         anchors.fill: parent
                         layer.enabled: true
+                        layer.smooth: true
+                        layer.samples: 4
                         visible: false
 
                         Rectangle {
                             anchors.fill: parent
                             radius: Metrics.radiusCard
                             color: "black"
+                            antialiasing: true
                         }
                     }
 
@@ -345,6 +364,9 @@ Container {
                         source: DynamicIsland.trackArt
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
+                        mipmap: true
+                        smooth: true
+                        antialiasing: true
                         visible: false
                     }
 
@@ -353,6 +375,8 @@ Container {
                         source: fullCover
                         maskEnabled: true
                         maskSource: fullMask
+                        maskThresholdMin: 0.5
+                        maskSpreadAtMin: 1.0
                         visible: fullCover.status === Image.Ready
                     }
 
@@ -407,10 +431,14 @@ Container {
                 spacing: 8
 
                 StyledText {
+                    id: positionText
                     text: root.formatTime(mediaSlider.isPressed ? (mediaSlider.dragValue * DynamicIsland.length) : DynamicIsland.currentPosition)
                     font.pixelSize: 10
+                    font.features: { "tnum": 1 }
                     color: Colors.on_surface_variant
                     Layout.alignment: Qt.AlignVCenter
+                    horizontalAlignment: Text.AlignLeft
+                    Layout.preferredWidth: Math.max(32, lengthText.implicitWidth)
                 }
 
                 Slider {
@@ -431,10 +459,14 @@ Container {
                 }
 
                 StyledText {
+                    id: lengthText
                     text: root.formatTime(DynamicIsland.length)
                     font.pixelSize: 10
+                    font.features: { "tnum": 1 }
                     color: Colors.on_surface_variant
                     Layout.alignment: Qt.AlignVCenter
+                    horizontalAlignment: Text.AlignRight
+                    Layout.preferredWidth: Math.max(32, implicitWidth)
                 }
             }
 

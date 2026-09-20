@@ -182,6 +182,9 @@ Item {
         radius: Metrics.radiusCard
         visible: false
         layer.enabled: true
+        layer.smooth: true
+        layer.samples: 4
+        antialiasing: true
     }
 
     ColumnLayout {
@@ -324,6 +327,9 @@ Item {
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: true
+                            mipmap: true
+                            smooth: true
+                            antialiasing: true
                             visible: false
                         }
 
@@ -332,6 +338,8 @@ Item {
                             source: thumb
                             maskEnabled: true
                             maskSource: thumbMask
+                            maskThresholdMin: 0.5
+                            maskSpreadAtMin: 1.0
                             visible: thumb.status === Image.Ready
                         }
 
