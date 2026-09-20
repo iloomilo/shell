@@ -36,6 +36,7 @@ Singleton {
         wallpaperProc.running = true;
         userProc.running = true;
         avatarProc.running = true;
+        startupLockProc.running = true;
     }
 
     function lock() {
@@ -72,6 +73,7 @@ Singleton {
         authenticating = false;
         failed = false;
         message = "";
+        markUnlockedProc.running = true;
     }
 
     Timer {
@@ -161,6 +163,20 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: root.avatar = text.length > 0 ? "file://" + text : ""
         }
+    }
+
+    Process {
+        id: startupLockProc
+        command: ["sh", "-c", "test -f \"$XDG_RUNTIME_DIR/quickshell-session-unlocked\""]
+        onExited: exitCode => {
+            if (exitCode !== 0)
+                root.lock();
+        }
+    }
+
+    Process {
+        id: markUnlockedProc
+        command: ["touch", (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/quickshell-session-unlocked"]
     }
 
     IpcHandler {
