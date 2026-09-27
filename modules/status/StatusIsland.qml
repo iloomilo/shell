@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Services.UPower
 import qs.services
 import qs.theme
 import qs.components
@@ -103,9 +104,12 @@ Rectangle {
     readonly property real sidePadding: Metrics.sidePadding
     readonly property real collapsedAudioX: sidePadding
     readonly property real collapsedWifiX: collapsedAudioX + audioHero.width + itemSpacing
+    readonly property bool hasBattery: Boolean(UPower.displayDevice && UPower.displayDevice.isPresent)
     readonly property real collapsedBtX: collapsedWifiX + wifiHero.width + itemSpacing
     readonly property real collapsedBatteryX: collapsedBtX + btHero.width + itemSpacing
-    readonly property real collapsedPowerX: collapsedBatteryX + batteryGroup.width + itemSpacing + 8
+    readonly property real collapsedPowerX: hasBattery 
+        ? (collapsedBatteryX + batteryGroup.width + itemSpacing + 8) 
+        : (collapsedBtX + btHero.width + itemSpacing + 8)
     readonly property real collapsedWidth: collapsedPowerX + 20 + sidePadding
 
     readonly property real expandedWidth: Metrics.expandedWidth
@@ -133,14 +137,14 @@ Rectangle {
 
     RowLayout {
         id: batteryGroup
-        width: implicitWidth
+        width: hasBattery ? implicitWidth : 0
         height: Metrics.islandHeight
         spacing: 0
         x: root.isExpanded ? (root.expandedWidth + 20) : root.collapsedBatteryX
         y: 0
-        opacity: root.collapsedVisible ? 1.0 : 0.0
+        opacity: hasBattery && root.collapsedVisible ? 1.0 : 0.0
         scale: root.isExpanded ? 0.8 : 1.0
-        visible: opacity > 0
+        visible: hasBattery && opacity > 0
 
         Behavior on x {
             enabled: root.isExpanded || root.menuTransitioning
