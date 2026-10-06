@@ -49,7 +49,10 @@ ShellRoot {
         }
     }
 
-    // One bar per connected monitor.
+    // A bar per connected monitor, holding the workspaces and status islands.
+    // The dynamic island is only instantiated on the focused bar (via Loader)
+    // so there is exactly one of it, without a second layer surface that would
+    // get pushed down by the bar's exclusive zone.
     Variants {
         model: Quickshell.screens
 
@@ -65,9 +68,7 @@ ShellRoot {
 
             WlrLayershell.layer: WlrLayer.Top
             WlrLayershell.keyboardFocus: {
-                if (!bar.isFocused)
-                    return WlrKeyboardFocus.None;
-                if (Services.DynamicIsland.isPicker)
+                if (bar.isFocused && Services.DynamicIsland.isPicker)
                     return WlrKeyboardFocus.Exclusive;
                 return statusIsland.requiresKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None;
             }
@@ -94,11 +95,15 @@ ShellRoot {
             }
 
             Item {
-                id: islandContainer
+                id: barContent
                 anchors.fill: parent
                 anchors.topMargin: Metrics.barTopMargin
                 anchors.leftMargin: Metrics.barSideMargin
                 anchors.rightMargin: Metrics.barSideMargin
+
+                readonly property var island: dynamicIslandLoader.item
+                readonly property real islandWidth: island ? island.width : 0
+                readonly property real islandHeight: island ? island.height : 0
 
                 WorkspacesIsland {
                     id: workspacesIsland
@@ -108,19 +113,22 @@ ShellRoot {
                     anchors.top: parent.top
                 }
 
-                DynamicIsland {
-                    id: dynamicIsland
+                Loader {
+                    id: dynamicIslandLoader
+                    active: bar.isFocused
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    visible: bar.isFocused
+                    width: barContent.islandWidth
+                    height: barContent.islandHeight
+                    sourceComponent: DynamicIsland {}
                 }
 
                 Item {
                     id: dynamicHitArea
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    width: !bar.isFocused ? 0 : ((Services.DynamicIsland.isPicker || dynamicCollapseTimer.running) ? Math.max(480, dynamicIsland.width) : dynamicIsland.width)
-                    height: !bar.isFocused ? 0 : ((Services.DynamicIsland.isPicker || dynamicCollapseTimer.running) ? Math.max(420, dynamicIsland.height) : dynamicIsland.height)
+                    width: !bar.isFocused ? 0 : ((Services.DynamicIsland.isPicker || dynamicCollapseTimer.running) ? Math.max(480, barContent.islandWidth) : barContent.islandWidth)
+                    height: !bar.isFocused ? 0 : ((Services.DynamicIsland.isPicker || dynamicCollapseTimer.running) ? Math.max(420, barContent.islandHeight) : barContent.islandHeight)
                 }
 
                 Timer {
