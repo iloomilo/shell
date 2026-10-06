@@ -280,7 +280,7 @@ Rectangle {
                 text: Network.iconName
                 color: root.isWifi 
                     ? Colors.primary 
-                    : (Network.connected 
+                    : (Network.online 
                         ? (wifiHover.hovered ? Colors.on_surface : Colors.on_surface_variant) 
                         : Colors.error)
 

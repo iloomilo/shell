@@ -8,6 +8,8 @@ Singleton {
     id: root
 
     property bool connected: false
+    // Wired link is up (nmcli device type "ethernet").
+    property bool ethernetConnected: false
     property string ssid: ""
     property int signal: 0
     property var networks: []
@@ -15,7 +17,12 @@ Singleton {
     property string connectingTo: ""
     property string failedSsid: ""
 
+    // True when any link (wired or wireless) is up. `connected` stays Wi-Fi only
+    // because the Wi-Fi menu and connect flow key off it.
+    readonly property bool online: connected || ethernetConnected
+
     readonly property string iconName: {
+        if (ethernetConnected) return "settings_ethernet";
         if (!connected) return "wifi_off";
         if (signal >= 75) return "wifi";
         if (signal >= 50) return "wifi_2_bar";
@@ -72,6 +79,9 @@ Singleton {
     function check() {
         if (!statusProc.running) {
             statusProc.running = true;
+        }
+        if (!devStatusProc.running) {
+            devStatusProc.running = true;
         }
     }
 
@@ -166,6 +176,53 @@ Singleton {
                 }
             }
         }
+    }
+
+    Process {
+        id: devStatusProc
+        command: ["nmcli", "-t", "-f", "TYPE,STATE", "dev", "status"]
+        stdout: StdioCollector {
+            onTextChanged: {
+                let lines = text.trim().split("\n");
+                let wired = false;
+                for (let i = 0; i < lines.length; ++i) {
+                    const parts = lines[i].split(":");
+                    if (parts[0] === "ethernet" && parts[1] === "connected") {
+                        wired = true;
+                        break;
+                    }
+                }
+                root.ethernetConnected = wired;
+            }
+        }
+    }
+
+    // NetworkManager streams device/connection changes; react immediately
+    // instead of waiting for the periodic poll.
+    Process {
+        id: monitorProc
+        command: ["nmcli", "monitor"]
+        running: true
+
+        stdout: SplitParser {
+            onRead: line => monitorDebounce.restart()
+        }
+
+        onExited: monitorRestart.restart()
+    }
+
+    Timer {
+        id: monitorDebounce
+        interval: 250
+        repeat: false
+        onTriggered: root.check()
+    }
+
+    Timer {
+        id: monitorRestart
+        interval: 2000
+        repeat: false
+        onTriggered: monitorProc.running = true
     }
 
     Process {
