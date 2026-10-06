@@ -6,6 +6,14 @@ import qs.components
 Row {
     id: root
 
+    // Monitor this workspaces row is rendered on. Windowsets are scoped to it so
+    // each bar only reflects its own monitor (niri numbers workspaces per output).
+    property var screen: null
+
+    readonly property var windowsets: root.screen
+        ? WindowManager.screenProjection(root.screen).windowsets
+        : WindowManager.windowsets
+
     readonly property real gap: 6
     readonly property real pillHeight: 12
     readonly property real activeWidth: 26
@@ -17,12 +25,12 @@ Row {
     Item {
         id: scratch
 
-        readonly property var ws: WindowManager.windowsets.find(w => w.name === "scratch")
+        readonly property var ws: root.windowsets.find(w => w.name === "scratch")
         readonly property bool isActive: Boolean(ws && ws.active)
         readonly property bool isUrgent: Boolean(ws && ws.urgent && !ws.active)
 
         // Pills after the first slot already bring their own leading gap
-        readonly property bool firstSlotShown: WindowManager.windowsets.some(w => w.name === "1" && w.shouldDisplay)
+        readonly property bool firstSlotShown: root.windowsets.some(w => w.name === "1" && w.shouldDisplay)
 
         visible: Boolean(ws)
         width: visible ? scratchRow.implicitWidth + (firstSlotShown ? root.gap : 0) : 0
@@ -130,7 +138,7 @@ Row {
             id: slot
 
             readonly property int wsIndex: index + 1
-            readonly property var ws: WindowManager.windowsets.find(w => w.name === String(wsIndex))
+            readonly property var ws: root.windowsets.find(w => w.name === String(wsIndex))
             readonly property bool isShown: Boolean(ws && ws.shouldDisplay)
             readonly property bool isActive: Boolean(ws && ws.active)
             readonly property bool isUrgent: Boolean(ws && ws.urgent && !ws.active)
