@@ -16,6 +16,18 @@ Singleton {
     property bool directoryExists: true
     property int selectedIndex: 0
 
+    readonly property var themes: [
+        { id: "dynamic", label: "Dynamic" },
+        { id: "static-nord", label: "Nord" },
+        { id: "static-catppuccin-latte", label: "Catppuccin Latte" },
+        { id: "static-catppuccin-frappe", label: "Catppuccin Frappé" },
+        { id: "static-catppuccin-macchiato", label: "Catppuccin Macchiato" },
+        { id: "static-catppuccin-mocha", label: "Catppuccin Mocha" }
+    ]
+    readonly property bool dynamicTheme: !scheme.startsWith("static-")
+    readonly property string theme: dynamicTheme ? "dynamic" : scheme
+    property string lastDynamicScheme: ""
+
     readonly property var schemes: [
         { id: "", label: "Tonal spot · Default" },
         { id: "scheme-content", label: "Content" },
@@ -38,6 +50,16 @@ Singleton {
     readonly property var filtered: category === "All" ? wallpapers : wallpapers.filter(w => w.category === category)
 
     onCategoryChanged: selectedIndex = 0
+    onSchemeChanged: {
+        if (dynamicTheme)
+            lastDynamicScheme = scheme;
+    }
+
+    function selectTheme(themeId) {
+        if (!themes.some(t => t.id === themeId))
+            return;
+        scheme = themeId === "dynamic" ? lastDynamicScheme : themeId;
+    }
 
     function refresh() {
         scheme = appliedScheme;
@@ -117,6 +139,8 @@ Singleton {
     }
 
     function cycleScheme(step) {
+        if (!dynamicTheme)
+            return;
         const index = Math.max(0, schemes.findIndex(s => s.id === scheme));
         scheme = schemes[(index + step + schemes.length) % schemes.length].id;
     }

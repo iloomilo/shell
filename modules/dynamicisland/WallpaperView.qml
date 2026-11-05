@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
+import QtQuick.Controls.Basic as Controls
 import qs.services
 import qs.theme
 import qs.components
@@ -16,8 +17,10 @@ Item {
     onVisibleChanged: {
         if (visible)
             focusTimer.restart();
-        else
+        else {
             previewTimer.stop();
+            themeSelector.popup.close();
+        }
     }
 
     Timer {
@@ -223,6 +226,79 @@ Item {
                 Layout.fillWidth: true
             }
 
+            Controls.ComboBox {
+                id: themeSelector
+                Layout.preferredWidth: 220
+                implicitHeight: 34
+                model: WallpaperService.themes
+                textRole: "label"
+                currentIndex: Math.max(0, WallpaperService.themes.findIndex(t => t.id === WallpaperService.theme))
+                onActivated: index => {
+                    WallpaperService.selectTheme(WallpaperService.themes[index].id);
+                    keyHandler.forceActiveFocus();
+                }
+                Accessible.name: "Theme"
+                leftPadding: 14
+                rightPadding: 34
+
+                contentItem: StyledText {
+                    text: themeSelector.displayText
+                    color: Colors.on_secondary_container
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                }
+                indicator: Icon {
+                    x: themeSelector.width - width - 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: themeSelector.popup.visible ? "expand_less" : "expand_more"
+                    color: Colors.on_secondary_container
+                    font.pixelSize: 20
+                }
+                background: Rectangle {
+                    radius: Metrics.radiusPill
+                    color: Colors.secondary_container
+                    border.width: themeSelector.activeFocus ? 1 : 0
+                    border.color: Colors.primary
+                }
+                delegate: Controls.ItemDelegate {
+                    id: themeOption
+                    required property var modelData
+                    required property int index
+                    width: themeSelector.width - 8
+                    implicitHeight: 38
+                    highlighted: themeSelector.highlightedIndex === themeOption.index
+                    contentItem: StyledText {
+                        text: themeOption.modelData.label
+                        color: WallpaperService.theme === themeOption.modelData.id ? Colors.primary : Colors.on_surface
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: Metrics.radiusSmall
+                        color: themeOption.highlighted ? Colors.surface_container_highest : "transparent"
+                    }
+                }
+                popup: Controls.Popup {
+                    y: themeSelector.height + 6
+                    width: themeSelector.width
+                    padding: 4
+                    implicitHeight: contentItem.implicitHeight + topPadding + bottomPadding
+                    contentItem: ListView {
+                        implicitHeight: Math.min(contentHeight, 260)
+                        model: themeSelector.delegateModel
+                        currentIndex: themeSelector.highlightedIndex
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+                        Controls.ScrollBar.vertical: Controls.ScrollBar {}
+                    }
+                    background: Rectangle {
+                        radius: Metrics.radiusSmall + 4
+                        color: Colors.surface_container_high
+                        border.width: 1
+                        border.color: Colors.outline_variant
+                    }
+                }
+            }
+
             Rectangle {
                 implicitWidth: 32
                 implicitHeight: 20
@@ -400,36 +476,62 @@ Item {
             }
         }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 10
+        Item {
+            id: dynamicSchemes
 
-            Icon {
-                text: "palette"
-                color: Colors.on_surface_variant
-                font.pixelSize: Typography.sizeIconMedium
-                Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: 4
+            // Include the row gap in the animated height so the grid expands
+            // continuously all the way to the bottom when Dynamic is hidden.
+            property real reveal: WallpaperService.dynamicTheme ? 1 : 0
+            Layout.fillWidth: true
+            Layout.topMargin: -12
+            Layout.preferredHeight: 42 * reveal
+            Layout.maximumHeight: Layout.preferredHeight
+            Layout.minimumHeight: 0
+            clip: true
+
+            Behavior on reveal {
+                MorphAnimation { expanding: WallpaperService.dynamicTheme }
             }
 
-            ListView {
-                id: schemeChips
-                Layout.fillWidth: true
-                implicitHeight: 30
-                orientation: ListView.Horizontal
-                spacing: 6
-                clip: true
-                boundsBehavior: Flickable.StopAtBounds
-                model: WallpaperService.schemes
-                currentIndex: Math.max(0, WallpaperService.schemes.findIndex(s => s.id === WallpaperService.scheme))
-                onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+            RowLayout {
+                width: parent.width
+                height: 30
+                y: 12 + (1 - dynamicSchemes.reveal) * 8
+                opacity: WallpaperService.dynamicTheme ? 1 : 0
+                enabled: WallpaperService.dynamicTheme
 
-                delegate: FilterChip {
-                    required property var modelData
-                    chipHeight: 30
-                    label: modelData.label
-                    selected: WallpaperService.scheme === modelData.id
-                    onActivated: WallpaperService.scheme = modelData.id
+                Behavior on opacity {
+                    FadeAnimation { entering: WallpaperService.dynamicTheme }
+                }
+                spacing: 10
+
+                Icon {
+                    text: "palette"
+                    color: Colors.on_surface_variant
+                    font.pixelSize: Typography.sizeIconMedium
+                    Layout.alignment: Qt.AlignVCenter
+                    Layout.leftMargin: 4
+                }
+
+                ListView {
+                    id: schemeChips
+                    Layout.fillWidth: true
+                    implicitHeight: 30
+                    orientation: ListView.Horizontal
+                    spacing: 6
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    model: WallpaperService.schemes
+                    currentIndex: Math.max(0, WallpaperService.schemes.findIndex(s => s.id === WallpaperService.lastDynamicScheme))
+                    onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+
+                    delegate: FilterChip {
+                        required property var modelData
+                        chipHeight: 30
+                        label: modelData.label
+                        selected: WallpaperService.lastDynamicScheme === modelData.id
+                        onActivated: WallpaperService.scheme = modelData.id
+                    }
                 }
             }
         }
